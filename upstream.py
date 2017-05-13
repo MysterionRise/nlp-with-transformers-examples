@@ -7,7 +7,7 @@ import time
 from datetime import datetime
 import random
 
-TICKERS = ["AAPL", "GOOG", "MSFT", "SPY"]
+TICKERS = ["AAPL", "GOOG", "MSFT", "SPY", "BDFG", "QWER", "FDGG", "YUIO", "PIUO"]
 PORT = 5555
 
 def timestamp_millis(timestamp):
@@ -27,7 +27,7 @@ def emit_trades(client_socket, addr):
     (host, port) = addr
     try:
         while True:
-            time.sleep(random.uniform(0.2, 3))
+            time.sleep(random.uniform(0.00002, 0.1))
             send_trade(client_socket, host, port)
     except Exception as e:
         print("[%s:%d] Error: %s" % (host, port, e))
