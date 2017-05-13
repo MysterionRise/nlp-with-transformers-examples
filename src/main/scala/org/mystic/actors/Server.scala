@@ -20,13 +20,12 @@ class Server(hostName: String, port: Int) extends Actor with ActorLogging {
 
   override def receive: Receive = {
 
-    case Bound(localAddress) => {
+    case Bound(localAddress) =>
       log.info(s"accepting the connection on $localAddress")
-    }
 
     case CommandFailed(_: Bind) => context stop self
 
-    case Connected(remoteAddress, localAddress) => {
+    case Connected(remoteAddress, localAddress) =>
 
       log.info(s"somebody connected from $remoteAddress")
 
@@ -37,10 +36,8 @@ class Server(hostName: String, port: Int) extends Actor with ActorLogging {
       handler ! Last10Minutes
       val cancelable = system.scheduler.schedule((60 - LocalDateTime.now().getSecond) seconds, 1 minutes, handler, Last1Minute)
       handler ! Cancel(cancelable)
-    }
 
-    case _ => {
+    case _ =>
       log.info("something goes wrong in server")
-    }
   }
 }

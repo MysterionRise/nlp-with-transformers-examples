@@ -17,14 +17,12 @@ class Client(hostName: String, port: Int) extends Actor with ActorLogging {
 
     case CommandFailed(_: Bind) => context stop self
 
-    case Connected(remoteAddress, localAddress) => {
+    case Connected(remoteAddress, localAddress) =>
 
       val handler = context.actorOf(Props[ReadHandler])
       sender() ! Register(handler)
-    }
 
-    case _ => {
+    case _ =>
       log.info("something goes wrong in client")
-    }
   }
 }

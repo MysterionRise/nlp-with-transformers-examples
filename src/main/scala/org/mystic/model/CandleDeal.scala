@@ -7,11 +7,11 @@ import org.json4s.native.JsonMethods._
 
 case class CandleDeal(ticker: String, timestamp: Long, open: Double, high: Double, low: Double, close: Double, volume: Long) {
 
-  def updateCandleWithDeal(d: Deal) = {
-    new CandleDeal(ticker, timestamp, d.price, Math.max(high, d.price), Math.min(low, d.price), d.price, volume + d.size)
+  def updateCandleWithDeal(d: Deal): CandleDeal = {
+    CandleDeal(ticker, timestamp, open, Math.max(high, d.price), Math.min(low, d.price), d.price, volume + d.size)
   }
 
-  def toJson(): String = {
+  def toJson: String = {
     val json =
       ("ticker" -> ticker) ~
         ("timestamp" -> Instant.ofEpochMilli(timestamp).toString) ~

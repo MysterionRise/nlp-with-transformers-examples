@@ -11,40 +11,34 @@ class WriteHandler(whereToSend: ActorRef) extends Actor with ActorLogging {
 
   override def receive: Receive = {
 
-    case Last10Minutes => {
+    case Last10Minutes =>
       log.info("trying to send 10 minutes data to the client")
       val storage = context.system.actorSelection("user/storage")
       storage ! AskFor10MData
-    }
 
-    case Data10Minutes(data: List[Option[CandleDeal]]) => {
-      data.filter(_.isDefined).map(_.get).map(_.toJson()).foreach(x => {
+    case Data10Minutes(data: List[Option[CandleDeal]]) =>
+      data.filter(_.isDefined).map(_.get).map(_.toJson).foreach(x => {
         whereToSend ! Write(ByteString(x))
       })
-    }
 
-    case Data1Minutes(data: List[Option[CandleDeal]]) => {
-      data.filter(_.isDefined).map(_.get).map(_.toJson()).foreach(x => {
+    case Data1Minutes(data: List[Option[CandleDeal]]) =>
+      data.filter(_.isDefined).map(_.get).map(_.toJson).foreach(x => {
         whereToSend ! Write(ByteString(x))
       })
-    }
 
-    case Cancel(cancel) => {
+    case Cancel(cancel) =>
       log.info("setting the cancellable")
       cancelable = cancel
-    }
 
-    case Last1Minute => {
+    case Last1Minute =>
       log.info("trying to send last minute data to the client")
       val storage = context.system.actorSelection("user/storage")
       storage ! AskFor1MData
-    }
 
-    case PeerClosed => {
+    case PeerClosed =>
       log.info("peer closed")
       cancelable.cancel()
       context stop self
-    }
 
     case _ => log.error("something goes wrong in WriteHandler")
   }
