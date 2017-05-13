@@ -24,7 +24,7 @@ class Check1MinuteSimpleData extends TestKit(ActorSystem("Check1MinData"))
   actorRef ? Deal(tradeTime.toEpochMilli, "C", 200.0d, 10)
 
   val future = actorRef ? AskFor1MData
-  val res = future.value.get.get.asInstanceOf[Data1Minutes]
+  val res = future.value.get.get.asInstanceOf[Data]
   res.data should have length 3
 
   res.data should contain (Some(CandleDeal("A", time , 100.0d, 100.0d, 100.0d, 100.0d, 10)))

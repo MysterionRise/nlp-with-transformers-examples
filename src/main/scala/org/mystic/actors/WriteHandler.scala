@@ -16,12 +16,7 @@ class WriteHandler(whereToSend: ActorRef) extends Actor with ActorLogging {
       val storage = context.system.actorSelection("user/storage")
       storage ! AskFor10MData
 
-    case Data10Minutes(data: List[Option[CandleDeal]]) =>
-      data.filter(_.isDefined).map(_.get).map(_.toJson).foreach(x => {
-        whereToSend ! Write(ByteString(x))
-      })
-
-    case Data1Minutes(data: List[Option[CandleDeal]]) =>
+    case Data(data: List[Option[CandleDeal]]) =>
       data.filter(_.isDefined).map(_.get).map(_.toJson).foreach(x => {
         whereToSend ! Write(ByteString(x))
       })

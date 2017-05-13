@@ -33,12 +33,11 @@ class StorageActor extends Actor with ActorLogging {
 
     case AskFor1MData =>
       val currentMin = truncateToMinute(Instant.now().toEpochMilli)
-      val names = dealsByName.keySet
-      val candles = names.map(name => {
+      val candles = dealsByName.keySet.map(name => {
         dealsByName(name).get(currentMin - MINUTE)
       })
       log.info(candles.toString())
-      sender() ! Data1Minutes(candles.toList)
+      sender() ! Data(candles.toList)
 
     case AskFor10MData =>
       val currentMin = truncateToMinute(Instant.now().toEpochMilli)
@@ -50,7 +49,7 @@ class StorageActor extends Actor with ActorLogging {
         dealsByName(x._2).get(currentMin - x._1 * MINUTE)
       })
       log.info(candles.toString())
-      sender() ! Data10Minutes(candles.toList)
+      sender() ! Data(candles.toList)
 
     case _ =>
       log.error("something goes wrong in storage actor")

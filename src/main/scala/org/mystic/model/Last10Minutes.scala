@@ -12,8 +12,6 @@ case class AskFor1MData()
 
 case class AskFor10MData()
 
-case class Data10Minutes(data: List[Option[CandleDeal]])
-
-case class Data1Minutes(data: List[Option[CandleDeal]])
+case class Data(data: List[Option[CandleDeal]])
 
 

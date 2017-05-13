@@ -24,7 +24,7 @@ class CheckStorageAggregator extends TestKit(ActorSystem("CheckAggregation"))
   actorRef ? Deal(tradeTime.toEpochMilli, "A", 200.0d, 10)
 
   val future = actorRef ? AskFor1MData
-  val res = future.value.get.get.asInstanceOf[Data1Minutes]
+  val res = future.value.get.get.asInstanceOf[Data]
   res.data should have length 1
 
   res.data should contain (Some(CandleDeal("A", time , 100.0d, 300.0d, 100.0d, 200.0d, 30)))
