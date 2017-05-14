@@ -29,14 +29,12 @@ class StorageActor extends Actor with ActorLogging {
       val updatedCandle = candle.updateCandleWithDeal(d)
       namedMap.put(truncateToMinute(d.timestamp), updatedCandle)
       dealsByName.put(d.ticker, namedMap)
-      log.info(dealsByName.toString())
 
     case AskFor1MData =>
       val currentMin = truncateToMinute(Instant.now().toEpochMilli)
       val candles = dealsByName.keySet.map(name => {
         dealsByName(name).get(currentMin - MINUTE)
       })
-      log.info(candles.toString())
       sender() ! Data(candles.toList)
 
     case AskFor10MData =>
@@ -48,7 +46,6 @@ class StorageActor extends Actor with ActorLogging {
       val candles = crossProduct.map(x => {
         dealsByName(x._2).get(currentMin - x._1 * MINUTE)
       })
-      log.info(candles.toString())
       sender() ! Data(candles.toList)
 
     case _ =>
