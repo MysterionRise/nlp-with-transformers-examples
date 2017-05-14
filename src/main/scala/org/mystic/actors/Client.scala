@@ -21,7 +21,7 @@ class Client(hostName: String, port: Int) extends Actor with ActorLogging {
       log.info(s"tryint to connect to $hostName $port once again")
       IO(Tcp) ! Connect(new InetSocketAddress(hostName, port))
 
-    case Connected(remoteAddress, localAddress) =>
+    case Connected(_, _) =>
 
       val handler = context.actorOf(Props[ReadHandler])
       sender() ! Register(handler)

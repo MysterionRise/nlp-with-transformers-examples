@@ -42,7 +42,7 @@ class StorageActor extends Actor with ActorLogging {
     case AskFor10MData =>
       val currentMin = truncateToMinute(Instant.now().toEpochMilli)
       val crossProduct = for {
-        x <- (10 to 1 by -1)
+        x <- 10 to 1 by -1
         y <- dealsByName.keySet
       } yield (x, y)
       val candles = crossProduct.map(x => {

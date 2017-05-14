@@ -25,7 +25,7 @@ class Server(hostName: String, port: Int) extends Actor with ActorLogging {
 
     case CommandFailed(_: Bind) => context stop self
 
-    case Connected(remoteAddress, localAddress) =>
+    case Connected(remoteAddress, _) =>
 
       log.info(s"somebody connected from $remoteAddress")
 
