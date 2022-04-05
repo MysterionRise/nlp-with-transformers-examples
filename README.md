@@ -1,1 +1,0 @@
-Run ```org.mystic.ActorApp``` via IDE or by ```sbt run```
