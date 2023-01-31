@@ -1,2 +1,4 @@
 venv
 .idea
+queries-clustering/queries-prod.csv
+.ipynb_checkpoints
