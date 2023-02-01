@@ -4,3 +4,6 @@ pyspark
 numpy
 jupyterlab
 sentence-transformers
+umap-learn
+hdbscan
+matplotlib
