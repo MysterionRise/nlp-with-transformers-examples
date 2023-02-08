@@ -2,8 +2,3 @@ johnsnowlabs
 spark-nlp==4.2.2
 pyspark
 numpy
-jupyterlab
-sentence-transformers
-umap-learn
-hdbscan
-matplotlib
