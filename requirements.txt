@@ -1,4 +1,5 @@
-johnsnowlabs
-spark-nlp==4.2.2
-pyspark
 numpy
+transformers[torch]
+google-play-scraper
+sentencepiece
+protobuf==3.20.*
