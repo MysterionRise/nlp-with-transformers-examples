@@ -1,7 +1,7 @@
 import spacy
 from spacy import displacy
 
-NER = spacy.load("en_core_web_lg")
+NER = spacy.load("en_core_web_trf")
 # please run python -m spacy download en_core_web_lg
 
 raw_text = (
