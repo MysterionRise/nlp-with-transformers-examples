@@ -3,3 +3,4 @@ transformers[torch]
 google-play-scraper
 sentencepiece
 protobuf==3.20.*
+spacy

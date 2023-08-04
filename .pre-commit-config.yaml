@@ -25,4 +25,4 @@ repos:
     hooks:
       - id: flake8
         language_version: python3
-        args: ['--max-line-length=90', '--ignore=W605, E203']
+        args: ['--max-line-length=120', '--ignore=W605, E203']
