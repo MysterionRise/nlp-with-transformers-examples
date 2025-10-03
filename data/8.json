@@ -1,0 +1,45 @@
+{
+  "query": "Which objective parameters are important to be assessed?",
+  "raw_answers": [
+    [
+      "BY1 ANEMIA",
+      "1 -  2. Diagnosis of EVH\u000bKEY Data: METHOD 1: DANICOPAN CLINICAL TRIAL INCLUSION CRITERIA section CLINICALLY EVIDENT EVH DEFINED BY1 ANEMIA(HgB <9.5 g/dL) TRANSFUSION DEPENDENT(At least 1 transfusion in the last 6 months while on C5 inhibitor treatment) HIGH RETICS(>1.2x ULN = Rules out BMF) + +"
+    ],
+    [
+      "Haptoglobin",
+      "Haptoglobin is a good lab test that can be used to identify intravascular hemolysis in PNH patients. LDH is fine but it is non-specific and can be elevated in many different clinical scenarios. \\n So what? Need better understanding of the impact on haptoglobin "
+    ],
+    [
+      "Patients with PNH",
+      "IVH vs EVH in Patients with PNH 100% of advisors choose IVH vs EVH, noting the process is the pathophysiological driver of disease and is most associated with the life-threatening complications of PNH Assessment Differential diagnosis Consequences Clinical Significance/\u000bNeed for C"
+    ],
+    [
+      "MECHANISTIC",
+      "bition, it is generally NOT CLINICALLY SIGNIFICANT OR DETECTABLE as RBCs that are susceptible to EVH are destroyed via IVH at a more rapid rate As a result of C5 inhibition (and consequently IVH inhibition), clinically detectable EVH may EMERGE as a MECHANISTIC CONSEQUENCE GENERAL CONSENSUS IVH Biomarkers LDH is a UNIVERSALLY ACCEPTED BIOMARKER for IVH in PNH Mortality Elevated LDH is HIGHLY ASSOCIATED with the frequency of THROMBOTIC EVENTS (the leading cause of mortality in PNH) PNH Definition PNH is a d"
+    ],
+    [
+      "CAUSE OF RESIDUAL SYMPTOMS",
+      "ion KEY DATA & INSIGHTS In order to establish EVH in PNH, a (1) DIAGNOSIS OF PNH MUST FIRST BE CONFIRMED, (2) C5 INHIBITORS MUST THEN UNMASK EVH, (3) RESIDUAL SYMPTOMS MUST THEN EMERGE, and finally (4) DIFFERENTIAL DIAGNOSIS MUST IDENTIFY EVH AS THE CAUSE OF RESIDUAL SYMPTOMS (Note: multiple possible proposed approaches for confirming EVH)CONFIRMING EVH: It is currently challenging to confirm the presence of EVH in PNH and there are MIXED PERSPECTIVES on the preferred way to diagnosis EVH in PNH (some sources indicate th"
+    ],
+    [
+      "No infection",
+      "ClinicAl course (LDH, HG, Reticulocytes) 24 No infection Ravulizumab No infection"
+    ],
+    [
+      "laboratory tests",
+      "ngly positive about the PNH treatment algorithm and one advisor noted that she would like to pin it on her wall.Advisors noted that anemia can be the result of an underlying pathophysiology in RBC production or RBC removal, and requires a battery of laboratory tests to determine the cause.  EVH was indicated as a top cause of anemia in PNH, when excluding BMF patients.  Erythropoietin levels were considered by some advisors when they could not determine the etiology of anemia.The label transfusion-dependent EVH"
+    ],
+    [
+      "hemolysisExtravascular hemolysis",
+      "ts would you consider to have clinically significant EVH in your clinical practice?What percentage of total patients with bone marrow failure would be considered to have symptomatic anemia? Assess for C5 mutation Unchanged Breakthrough intravascular hemolysisExtravascular hemolysis (EVH)Hypersplenism (e.g. due to previous Budd-Chiari Syndrome)Bleeding (especially if thrombocytopenia or dysfunctional platelets)Presence of alloantibodies from previous transfusionsIneffective erythropoiesis"
+    ],
+    [
+      "elimination",
+      "no symptoms, continue therapy and monitor Hb? Assess forC5 mutation  1.5x ULN >1.5x ULN Unchanged Reduced  LDH? Commencement of C5 inhibitor treatment Internally at Alexion, Dr. Anita Hill has proposed narrowing in on EVH in PNH through a process of elimination based on LDH, HEMOGLOBIN, ANEMIA and RETICS (though final confirmation of EVH is still required) 2. Diagnosis of EVH\u000bKEY Data: METHOD 5: PROCESS OF ELIMINATION section EVHBleeding (especially if thrombocytopenia or dysfunctional platelets)Presence o"
+    ],
+    [
+      "80% of patients are seen at least quarterly",
+      "1 - Soliris ATU PNH W1 Q2-2018_EMEAC Report_Final2  Global PUM Reassessment Country Presentation 310320153 - 1210 PNH Segmentation presentation_Final V3 80% of patients are seen at least quarterly by their physician; among physicians, the majority (70%) indicate conducting routine monitoring; among AA patients, the majority of HCPs indicate assessment of signs & symptoms at least quarterly, and reassessing clone size at least every 6 months O"
+    ]
+  ]
+}

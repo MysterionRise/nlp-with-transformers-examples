@@ -1,4 +1,38 @@
+# Virtual environments
 venv
+env
+ENV
+.venv
+
+# IDE
 .idea
+.vscode
+*.swp
+*.swo
+*~
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+dist/
+build/
+*.egg
+
+# Jupyter
 .ipynb_checkpoints
-/data/
+*.ipynb_checkpoints
+
+# Data and outputs
+/data/*.csv
+results.json
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Pre-commit
+.pre-commit-config.yaml.bak

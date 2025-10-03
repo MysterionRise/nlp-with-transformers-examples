@@ -6,7 +6,8 @@ from google_play_scraper import Sort, reviews_all
 ssl._create_default_https_context = ssl._create_unverified_context
 
 # provide application name to get all reviews
-APP_NAME = None
+# Example: "com.google.android.apps.maps" for Google Maps
+APP_NAME = "com.example.app"  # Replace with actual app package name
 
 if __name__ == "__main__":
     result = reviews_all(
