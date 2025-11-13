@@ -1,5 +1,12 @@
 # NLP with Transformers - Interactive Examples
 
+[![CI](https://github.com/MysterionRise/nlp-with-transformers-examples/workflows/CI/badge.svg)](https://github.com/MysterionRise/nlp-with-transformers-examples/actions)
+[![Code Quality](https://github.com/MysterionRise/nlp-with-transformers-examples/workflows/Code%20Quality/badge.svg)](https://github.com/MysterionRise/nlp-with-transformers-examples/actions)
+[![Pre-commit](https://github.com/MysterionRise/nlp-with-transformers-examples/workflows/Pre-commit/badge.svg)](https://github.com/MysterionRise/nlp-with-transformers-examples/actions)
+[![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
 A collection of practical NLP examples inspired by [Natural Language Processing with Transformers: Building Language Applications with Hugging Face](https://www.amazon.co.uk/gp/product/1098103246/ref=ppx_yo_dt_b_asin_title_o02_s00?ie=UTF8&psc=1) with **interactive web UIs** for hands-on experimentation.
 
 ## 🎯 Features
@@ -201,6 +208,60 @@ Comprehensive NLP evaluation with BLEU, ROUGE, METEOR, BERTScore.
 
 See `requirements.txt` for full list.
 
+## 🧪 Testing & Quality
+
+This project maintains high code quality with comprehensive testing and CI/CD.
+
+### Running Tests
+
+```bash
+# All tests with coverage
+make test
+
+# Unit tests only
+make test-unit
+
+# Smoke tests only
+make test-smoke
+
+# Fast tests (parallel execution)
+make test-fast
+```
+
+### Code Quality Checks
+
+```bash
+# Format code
+make format
+
+# Lint code
+make lint
+
+# Run all quality checks
+make quality
+
+# Security scan
+make security
+```
+
+### Pre-commit Hooks
+
+Install pre-commit hooks to automatically run checks before each commit:
+```bash
+pre-commit install
+```
+
+### Test Coverage
+
+- Unit tests for UI components
+- Integration tests for workflows
+- Smoke tests for all UIs
+- Code coverage reporting
+- Multi-platform testing (Ubuntu, macOS, Windows)
+- Multi-version testing (Python 3.9, 3.10, 3.11)
+
+See [tests/README.md](tests/README.md) for detailed testing documentation.
+
 ## 🎓 Use Cases
 
 - **Education**: Learn NLP concepts interactively
@@ -212,17 +273,36 @@ See `requirements.txt` for full list.
 ## 📖 Additional Resources
 
 - [Implementation Plan](IMPLEMENTATION_PLAN.md) - Detailed feature roadmap
+- [Testing Guide](tests/README.md) - Comprehensive testing documentation
+- [Contributing Guide](CONTRIBUTING.md) - How to contribute
 - [Hugging Face Transformers Docs](https://huggingface.co/docs/transformers)
 - [Spacy Documentation](https://spacy.io/usage)
 - [Gradio Documentation](https://gradio.app/docs/)
 
 ## 🤝 Contributing
 
-Contributions are welcome! Feel free to:
-- Report bugs
-- Suggest new features
-- Submit pull requests
-- Improve documentation
+Contributions are welcome! Please read our [Contributing Guide](CONTRIBUTING.md) for details on:
+
+- Development setup
+- Code style guidelines
+- Testing requirements
+- Pull request process
+- Commit message conventions
+
+Quick start:
+```bash
+# Fork and clone the repository
+git clone https://github.com/YOUR_USERNAME/nlp-with-transformers-examples.git
+
+# Install development dependencies
+make install-dev
+
+# Make your changes and run tests
+make test
+make lint
+
+# Submit a pull request
+```
 
 ## 📄 License
 
