@@ -22,9 +22,7 @@ if __name__ == "__main__":
             content = row[3]
             score = row[4]
             content = preprocess(content)
-            sentiment_task = pipeline(
-                "sentiment-analysis", model=model_path, tokenizer=model_path
-            )
+            sentiment_task = pipeline("sentiment-analysis", model=model_path, tokenizer=model_path)
             print(content)
             print(score)
             print(sentiment_task(content))

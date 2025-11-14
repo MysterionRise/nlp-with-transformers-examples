@@ -118,9 +118,7 @@ Available UIs:
         help="UI to launch (sentiment, similarity, ner, summarization)",
     )
 
-    parser.add_argument(
-        "--list", "-l", action="store_true", help="List all available UIs"
-    )
+    parser.add_argument("--list", "-l", action="store_true", help="List all available UIs")
 
     args = parser.parse_args()
 

@@ -45,9 +45,7 @@ class TestUIImports:
         try:
             import importlib.util
 
-            spec = importlib.util.spec_from_file_location(
-                "ner_visualizer", project_root / "ui" / "ner_visualizer.py"
-            )
+            spec = importlib.util.spec_from_file_location("ner_visualizer", project_root / "ui" / "ner_visualizer.py")
             module = importlib.util.module_from_spec(spec)
             assert module is not None
         except Exception as e:

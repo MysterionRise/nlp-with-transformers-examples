@@ -117,7 +117,9 @@ def summarize_text(
             max_length=max_length,
             do_sample=do_sample,
             truncation=True,
-        )[0]["summary_text"]
+        )[
+            0
+        ]["summary_text"]
 
         gen_time = time.time() - start_time
 
@@ -132,9 +134,7 @@ def summarize_text(
         return f"Error: {str(e)}", {}, 0.0
 
 
-def compare_models(
-    text: str, models: List[str], min_length: int, max_length: int
-) -> List[Tuple[str, str, Dict]]:
+def compare_models(text: str, models: List[str], min_length: int, max_length: int) -> List[Tuple[str, str, Dict]]:
     """
     Compare multiple models on the same text
 
@@ -369,9 +369,7 @@ def create_ui():
 
         # Connect components - Model Comparison
         compare_btn.click(
-            fn=lambda t, m, min_l, max_l: format_comparison_results(
-                compare_models(t, m, min_l, max_l)
-            ),
+            fn=lambda t, m, min_l, max_l: format_comparison_results(compare_models(t, m, min_l, max_l)),
             inputs=[compare_text, compare_models_select, compare_min, compare_max],
             outputs=[comparison_output],
         )

@@ -149,8 +149,7 @@ def analyze_batch(text: str, model_name: str, delimiter: str = "\n") -> str:
             pred = classifier(txt[:512])[0]
             top = max(pred, key=lambda x: x["score"])
             results.append(
-                f"{i}. {txt[:50]}{'...' if len(txt) > 50 else ''}\n"
-                f"   → {top['label']} ({top['score']*100:.2f}%)\n"
+                f"{i}. {txt[:50]}{'...' if len(txt) > 50 else ''}\n" f"   → {top['label']} ({top['score']*100:.2f}%)\n"
             )
 
         return "\n".join(results)
@@ -185,9 +184,7 @@ EXAMPLES = [
 def create_ui():
     """Create and configure the Gradio interface"""
 
-    with gr.Blocks(
-        title="Sentiment Analysis Playground", theme=gr.themes.Soft()
-    ) as demo:
+    with gr.Blocks(title="Sentiment Analysis Playground", theme=gr.themes.Soft()) as demo:
         gr.Markdown(
             """
             # 🎭 Sentiment Analysis Playground
@@ -245,9 +242,7 @@ def create_ui():
                     batch_btn = gr.Button("Analyze All", variant="primary")
 
                 with gr.Column():
-                    batch_output = gr.Textbox(
-                        label="Batch Results", lines=15, max_lines=20
-                    )
+                    batch_output = gr.Textbox(label="Batch Results", lines=15, max_lines=20)
 
         with gr.Tab("About"):
             gr.Markdown(
@@ -285,9 +280,7 @@ def create_ui():
             outputs=[output_json, output_plot],
         )
 
-        batch_btn.click(
-            fn=analyze_batch, inputs=[batch_input, batch_model], outputs=[batch_output]
-        )
+        batch_btn.click(fn=analyze_batch, inputs=[batch_input, batch_model], outputs=[batch_output])
 
     return demo
 

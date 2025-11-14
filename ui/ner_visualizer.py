@@ -42,16 +42,12 @@ def load_model():
                 nlp_model = spacy.load("en_core_web_sm")
                 logger.info("Loaded en_core_web_sm model")
             except OSError:
-                logger.error(
-                    "No Spacy model found. Please install with: python -m spacy download en_core_web_sm"
-                )
+                logger.error("No Spacy model found. Please install with: python -m spacy download en_core_web_sm")
                 raise
     return nlp_model
 
 
-def extract_entities(
-    text: str, entity_types: List[str] = None
-) -> Tuple[str, str, object, str]:
+def extract_entities(text: str, entity_types: List[str] = None) -> Tuple[str, str, object, str]:
     """
     Extract named entities from text
 
@@ -250,9 +246,7 @@ def create_ui():
                 entities_table = gr.Markdown(label="Extracted Entities")
 
             with gr.Tab("JSON Export"):
-                json_output = gr.Code(
-                    label="JSON Format (copy to export)", language="json", lines=15
-                )
+                json_output = gr.Code(label="JSON Format (copy to export)", language="json", lines=15)
 
         with gr.Accordion("Examples - Click to load", open=False):
             gr.Examples(

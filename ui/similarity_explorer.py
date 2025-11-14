@@ -45,12 +45,8 @@ def load_model():
 def mean_pooling(model_output, attention_mask):
     """Apply mean pooling to get sentence embeddings"""
     token_embeddings = model_output[0]
-    input_mask_expanded = (
-        attention_mask.unsqueeze(-1).expand(token_embeddings.size()).float()
-    )
-    return torch.sum(token_embeddings * input_mask_expanded, 1) / torch.clamp(
-        input_mask_expanded.sum(1), min=1e-9
-    )
+    input_mask_expanded = attention_mask.unsqueeze(-1).expand(token_embeddings.size()).float()
+    return torch.sum(token_embeddings * input_mask_expanded, 1) / torch.clamp(input_mask_expanded.sum(1), min=1e-9)
 
 
 def get_embeddings(sentences: List[str]) -> np.ndarray:
@@ -66,9 +62,7 @@ def get_embeddings(sentences: List[str]) -> np.ndarray:
     load_model()
 
     # Tokenize sentences
-    encoded_input = tokenizer(
-        sentences, padding=True, truncation=True, return_tensors="pt"
-    )
+    encoded_input = tokenizer(sentences, padding=True, truncation=True, return_tensors="pt")
 
     # Compute embeddings
     with torch.no_grad():
@@ -198,9 +192,7 @@ def batch_similarity(text: str, query: str) -> Tuple[str, object]:
         for rank, idx in enumerate(sorted_indices, 1):
             sent = sentences[idx]
             sim = similarities[idx]
-            results.append(
-                f"{rank}. [Score: {sim:.4f}] {sent[:100]}{'...' if len(sent) > 100 else ''}\n"
-            )
+            results.append(f"{rank}. [Score: {sim:.4f}] {sent[:100]}{'...' if len(sent) > 100 else ''}\n")
 
         # Create bar chart
         fig = go.Figure(
@@ -261,15 +253,11 @@ def visualize_embeddings(text: str, method: str = "t-SNE") -> object:
 
         # Apply dimensionality reduction
         if method == "t-SNE":
-            reducer = TSNE(
-                n_components=2, random_state=42, perplexity=min(30, len(sentences) - 1)
-            )
+            reducer = TSNE(n_components=2, random_state=42, perplexity=min(30, len(sentences) - 1))
         elif method == "PCA":
             reducer = PCA(n_components=2, random_state=42)
         else:  # UMAP would require umap-learn
-            reducer = TSNE(
-                n_components=2, random_state=42, perplexity=min(30, len(sentences) - 1)
-            )
+            reducer = TSNE(n_components=2, random_state=42, perplexity=min(30, len(sentences) - 1))
 
         coords = reducer.fit_transform(embeddings)
 
@@ -392,9 +380,7 @@ Coffee tastes great in the morning."""
 def create_ui():
     """Create and configure the Gradio interface"""
 
-    with gr.Blocks(
-        title="Sentence Similarity Explorer", theme=gr.themes.Soft()
-    ) as demo:
+    with gr.Blocks(title="Sentence Similarity Explorer", theme=gr.themes.Soft()) as demo:
         gr.Markdown(
             """
             # 🔍 Sentence Similarity Explorer
@@ -405,9 +391,7 @@ def create_ui():
         )
 
         with gr.Tab("Pairwise Comparison"):
-            gr.Markdown(
-                "### Compare two sentences to see how semantically similar they are"
-            )
+            gr.Markdown("### Compare two sentences to see how semantically similar they are")
 
             with gr.Row():
                 with gr.Column():
@@ -548,13 +532,9 @@ def create_ui():
             outputs=[search_results, search_plot],
         )
 
-        viz_btn.click(
-            fn=visualize_embeddings, inputs=[viz_text, viz_method], outputs=[viz_plot]
-        )
+        viz_btn.click(fn=visualize_embeddings, inputs=[viz_text, viz_method], outputs=[viz_plot])
 
-        matrix_btn.click(
-            fn=create_similarity_matrix, inputs=[matrix_text], outputs=[matrix_plot]
-        )
+        matrix_btn.click(fn=create_similarity_matrix, inputs=[matrix_text], outputs=[matrix_plot])
 
     return demo
 
