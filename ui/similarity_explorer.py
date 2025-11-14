@@ -9,24 +9,25 @@ Features:
 - Semantic search (find most similar sentences)
 """
 
+import logging
+from typing import Dict, List, Tuple
+
 import gradio as gr
-from transformers import AutoTokenizer, AutoModel
+import numpy as np
+import plotly.express as px
+import plotly.graph_objects as go
 import torch
 import torch.nn.functional as F
-import plotly.graph_objects as go
-import plotly.express as px
-import numpy as np
-from sklearn.manifold import TSNE
 from sklearn.decomposition import PCA
-import logging
-from typing import List, Tuple, Dict
+from sklearn.manifold import TSNE
+from transformers import AutoModel, AutoTokenizer
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # Model configuration
-MODEL_NAME = 'sentence-transformers/all-MiniLM-L6-v2'
+MODEL_NAME = "sentence-transformers/all-MiniLM-L6-v2"
 tokenizer = None
 model = None
 
@@ -44,7 +45,9 @@ def load_model():
 def mean_pooling(model_output, attention_mask):
     """Apply mean pooling to get sentence embeddings"""
     token_embeddings = model_output[0]
-    input_mask_expanded = attention_mask.unsqueeze(-1).expand(token_embeddings.size()).float()
+    input_mask_expanded = (
+        attention_mask.unsqueeze(-1).expand(token_embeddings.size()).float()
+    )
     return torch.sum(token_embeddings * input_mask_expanded, 1) / torch.clamp(
         input_mask_expanded.sum(1), min=1e-9
     )
@@ -63,14 +66,16 @@ def get_embeddings(sentences: List[str]) -> np.ndarray:
     load_model()
 
     # Tokenize sentences
-    encoded_input = tokenizer(sentences, padding=True, truncation=True, return_tensors='pt')
+    encoded_input = tokenizer(
+        sentences, padding=True, truncation=True, return_tensors="pt"
+    )
 
     # Compute embeddings
     with torch.no_grad():
         model_output = model(**encoded_input)
 
     # Apply mean pooling
-    sentence_embeddings = mean_pooling(model_output, encoded_input['attention_mask'])
+    sentence_embeddings = mean_pooling(model_output, encoded_input["attention_mask"])
 
     # Normalize embeddings
     sentence_embeddings = F.normalize(sentence_embeddings, p=2, dim=1)
@@ -112,36 +117,38 @@ def compare_two_sentences(text1: str, text2: str) -> Tuple[float, str, Dict]:
             interpretation = "🔴 Very Low Similarity - Different topics"
 
         # Create gauge chart
-        fig = go.Figure(go.Indicator(
-            mode="gauge+number+delta",
-            value=similarity,
-            domain={'x': [0, 1], 'y': [0, 1]},
-            title={'text': "Semantic Similarity Score"},
-            delta={'reference': 0.5},
-            gauge={
-                'axis': {'range': [None, 1]},
-                'bar': {'color': "darkblue"},
-                'steps': [
-                    {'range': [0, 0.3], 'color': "lightgray"},
-                    {'range': [0.3, 0.5], 'color': "lightblue"},
-                    {'range': [0.5, 0.7], 'color': "lightyellow"},
-                    {'range': [0.7, 0.9], 'color': "lightgreen"},
-                    {'range': [0.9, 1.0], 'color': "green"}
-                ],
-                'threshold': {
-                    'line': {'color': "red", 'width': 4},
-                    'thickness': 0.75,
-                    'value': 0.8
-                }
-            }
-        ))
+        fig = go.Figure(
+            go.Indicator(
+                mode="gauge+number+delta",
+                value=similarity,
+                domain={"x": [0, 1], "y": [0, 1]},
+                title={"text": "Semantic Similarity Score"},
+                delta={"reference": 0.5},
+                gauge={
+                    "axis": {"range": [None, 1]},
+                    "bar": {"color": "darkblue"},
+                    "steps": [
+                        {"range": [0, 0.3], "color": "lightgray"},
+                        {"range": [0.3, 0.5], "color": "lightblue"},
+                        {"range": [0.5, 0.7], "color": "lightyellow"},
+                        {"range": [0.7, 0.9], "color": "lightgreen"},
+                        {"range": [0.9, 1.0], "color": "green"},
+                    ],
+                    "threshold": {
+                        "line": {"color": "red", "width": 4},
+                        "thickness": 0.75,
+                        "value": 0.8,
+                    },
+                },
+            )
+        )
 
         fig.update_layout(height=300, margin=dict(l=20, r=20, t=40, b=20))
 
         results = {
             "Similarity Score": f"{similarity:.4f}",
             "Percentage": f"{similarity * 100:.2f}%",
-            "Interpretation": interpretation
+            "Interpretation": interpretation,
         }
 
         return similarity, interpretation, fig
@@ -167,7 +174,7 @@ def batch_similarity(text: str, query: str) -> Tuple[str, object]:
 
     try:
         # Parse sentences
-        sentences = [s.strip() for s in text.split('\n') if s.strip()]
+        sentences = [s.strip() for s in text.split("\n") if s.strip()]
 
         if not sentences:
             return "No valid sentences found", None
@@ -191,30 +198,34 @@ def batch_similarity(text: str, query: str) -> Tuple[str, object]:
         for rank, idx in enumerate(sorted_indices, 1):
             sent = sentences[idx]
             sim = similarities[idx]
-            results.append(f"{rank}. [Score: {sim:.4f}] {sent[:100]}{'...' if len(sent) > 100 else ''}\n")
+            results.append(
+                f"{rank}. [Score: {sim:.4f}] {sent[:100]}{'...' if len(sent) > 100 else ''}\n"
+            )
 
         # Create bar chart
-        fig = go.Figure(data=[
-            go.Bar(
-                y=[f"Sentence {i+1}" for i in sorted_indices[:10]],  # Top 10
-                x=[similarities[i] for i in sorted_indices[:10]],
-                orientation='h',
-                marker=dict(
-                    color=[similarities[i] for i in sorted_indices[:10]],
-                    colorscale='Viridis',
-                    showscale=True
-                ),
-                text=[f"{similarities[i]:.3f}" for i in sorted_indices[:10]],
-                textposition='auto',
-            )
-        ])
+        fig = go.Figure(
+            data=[
+                go.Bar(
+                    y=[f"Sentence {i+1}" for i in sorted_indices[:10]],  # Top 10
+                    x=[similarities[i] for i in sorted_indices[:10]],
+                    orientation="h",
+                    marker=dict(
+                        color=[similarities[i] for i in sorted_indices[:10]],
+                        colorscale="Viridis",
+                        showscale=True,
+                    ),
+                    text=[f"{similarities[i]:.3f}" for i in sorted_indices[:10]],
+                    textposition="auto",
+                )
+            ]
+        )
 
         fig.update_layout(
             title="Top 10 Most Similar Sentences",
             xaxis_title="Similarity Score",
             yaxis_title="Sentences",
             height=400,
-            margin=dict(l=20, r=20, t=40, b=20)
+            margin=dict(l=20, r=20, t=40, b=20),
         )
 
         return "".join(results), fig
@@ -240,7 +251,7 @@ def visualize_embeddings(text: str, method: str = "t-SNE") -> object:
 
     try:
         # Parse sentences
-        sentences = [s.strip() for s in text.split('\n') if s.strip()]
+        sentences = [s.strip() for s in text.split("\n") if s.strip()]
 
         if len(sentences) < 2:
             return None
@@ -250,36 +261,42 @@ def visualize_embeddings(text: str, method: str = "t-SNE") -> object:
 
         # Apply dimensionality reduction
         if method == "t-SNE":
-            reducer = TSNE(n_components=2, random_state=42, perplexity=min(30, len(sentences) - 1))
+            reducer = TSNE(
+                n_components=2, random_state=42, perplexity=min(30, len(sentences) - 1)
+            )
         elif method == "PCA":
             reducer = PCA(n_components=2, random_state=42)
         else:  # UMAP would require umap-learn
-            reducer = TSNE(n_components=2, random_state=42, perplexity=min(30, len(sentences) - 1))
+            reducer = TSNE(
+                n_components=2, random_state=42, perplexity=min(30, len(sentences) - 1)
+            )
 
         coords = reducer.fit_transform(embeddings)
 
         # Create labels (truncated sentences)
-        labels = [s[:50] + '...' if len(s) > 50 else s for s in sentences]
+        labels = [s[:50] + "..." if len(s) > 50 else s for s in sentences]
 
         # Create scatter plot
-        fig = go.Figure(data=[
-            go.Scatter(
-                x=coords[:, 0],
-                y=coords[:, 1],
-                mode='markers+text',
-                marker=dict(
-                    size=10,
-                    color=np.arange(len(sentences)),
-                    colorscale='Viridis',
-                    showscale=True,
-                    colorbar=dict(title="Sentence ID")
-                ),
-                text=[f"{i+1}" for i in range(len(sentences))],
-                textposition="top center",
-                hovertext=labels,
-                hoverinfo='text'
-            )
-        ])
+        fig = go.Figure(
+            data=[
+                go.Scatter(
+                    x=coords[:, 0],
+                    y=coords[:, 1],
+                    mode="markers+text",
+                    marker=dict(
+                        size=10,
+                        color=np.arange(len(sentences)),
+                        colorscale="Viridis",
+                        showscale=True,
+                        colorbar=dict(title="Sentence ID"),
+                    ),
+                    text=[f"{i+1}" for i in range(len(sentences))],
+                    textposition="top center",
+                    hovertext=labels,
+                    hoverinfo="text",
+                )
+            ]
+        )
 
         fig.update_layout(
             title=f"Sentence Embeddings Visualization ({method})",
@@ -287,7 +304,7 @@ def visualize_embeddings(text: str, method: str = "t-SNE") -> object:
             yaxis_title=f"{method} Dimension 2",
             height=500,
             showlegend=False,
-            margin=dict(l=20, r=20, t=40, b=20)
+            margin=dict(l=20, r=20, t=40, b=20),
         )
 
         return fig
@@ -312,7 +329,7 @@ def create_similarity_matrix(text: str) -> object:
 
     try:
         # Parse sentences
-        sentences = [s.strip() for s in text.split('\n') if s.strip()]
+        sentences = [s.strip() for s in text.split("\n") if s.strip()]
 
         if len(sentences) < 2:
             return None
@@ -327,23 +344,25 @@ def create_similarity_matrix(text: str) -> object:
         labels = [f"S{i+1}" for i in range(len(sentences))]
 
         # Create heatmap
-        fig = go.Figure(data=go.Heatmap(
-            z=similarity_matrix,
-            x=labels,
-            y=labels,
-            colorscale='RdYlGn',
-            text=np.round(similarity_matrix, 3),
-            texttemplate='%{text}',
-            textfont={"size": 10},
-            colorbar=dict(title="Similarity")
-        ))
+        fig = go.Figure(
+            data=go.Heatmap(
+                z=similarity_matrix,
+                x=labels,
+                y=labels,
+                colorscale="RdYlGn",
+                text=np.round(similarity_matrix, 3),
+                texttemplate="%{text}",
+                textfont={"size": 10},
+                colorbar=dict(title="Similarity"),
+            )
+        )
 
         fig.update_layout(
             title="Sentence Similarity Matrix",
             xaxis_title="Sentences",
             yaxis_title="Sentences",
             height=500,
-            margin=dict(l=20, r=20, t=40, b=20)
+            margin=dict(l=20, r=20, t=40, b=20),
         )
 
         return fig
@@ -373,7 +392,9 @@ Coffee tastes great in the morning."""
 def create_ui():
     """Create and configure the Gradio interface"""
 
-    with gr.Blocks(title="Sentence Similarity Explorer", theme=gr.themes.Soft()) as demo:
+    with gr.Blocks(
+        title="Sentence Similarity Explorer", theme=gr.themes.Soft()
+    ) as demo:
         gr.Markdown(
             """
             # 🔍 Sentence Similarity Explorer
@@ -384,19 +405,21 @@ def create_ui():
         )
 
         with gr.Tab("Pairwise Comparison"):
-            gr.Markdown("### Compare two sentences to see how semantically similar they are")
+            gr.Markdown(
+                "### Compare two sentences to see how semantically similar they are"
+            )
 
             with gr.Row():
                 with gr.Column():
                     sent1_input = gr.Textbox(
                         label="First Sentence",
                         placeholder="Enter the first sentence...",
-                        lines=3
+                        lines=3,
                     )
                     sent2_input = gr.Textbox(
                         label="Second Sentence",
                         placeholder="Enter the second sentence...",
-                        lines=3
+                        lines=3,
                     )
                     compare_btn = gr.Button("Compare Sentences", variant="primary")
 
@@ -407,7 +430,7 @@ def create_ui():
             gr.Examples(
                 examples=EXAMPLE_PAIRS,
                 inputs=[sent1_input, sent2_input],
-                label="Try these examples"
+                label="Try these examples",
             )
 
         with gr.Tab("Semantic Search"):
@@ -419,20 +442,17 @@ def create_ui():
                         label="Sentences (one per line)",
                         placeholder="Sentence 1\nSentence 2\nSentence 3\n...",
                         lines=10,
-                        value=EXAMPLE_BATCH
+                        value=EXAMPLE_BATCH,
                     )
                     query_input = gr.Textbox(
                         label="Query Sentence",
                         placeholder="Enter your query...",
-                        lines=2
+                        lines=2,
                     )
                     search_btn = gr.Button("Search", variant="primary")
 
                 with gr.Column():
-                    search_results = gr.Textbox(
-                        label="Ranked Results",
-                        lines=15
-                    )
+                    search_results = gr.Textbox(label="Ranked Results", lines=15)
                     search_plot = gr.Plot(label="Top Matches")
 
         with gr.Tab("Embedding Visualization"):
@@ -444,12 +464,12 @@ def create_ui():
                         label="Sentences (one per line)",
                         placeholder="Sentence 1\nSentence 2\nSentence 3\n...",
                         lines=15,
-                        value=EXAMPLE_BATCH
+                        value=EXAMPLE_BATCH,
                     )
                     viz_method = gr.Radio(
                         choices=["t-SNE", "PCA"],
                         value="t-SNE",
-                        label="Visualization Method"
+                        label="Visualization Method",
                     )
                     viz_btn = gr.Button("Visualize", variant="primary")
 
@@ -465,7 +485,7 @@ def create_ui():
                         label="Sentences (one per line)",
                         placeholder="Sentence 1\nSentence 2\nSentence 3\n...",
                         lines=15,
-                        value=EXAMPLE_BATCH
+                        value=EXAMPLE_BATCH,
                     )
                     matrix_btn = gr.Button("Generate Matrix", variant="primary")
 
@@ -519,25 +539,21 @@ def create_ui():
         compare_btn.click(
             fn=lambda s1, s2: compare_two_sentences(s1, s2)[1:],
             inputs=[sent1_input, sent2_input],
-            outputs=[similarity_output, similarity_plot]
+            outputs=[similarity_output, similarity_plot],
         )
 
         search_btn.click(
             fn=batch_similarity,
             inputs=[batch_text, query_input],
-            outputs=[search_results, search_plot]
+            outputs=[search_results, search_plot],
         )
 
         viz_btn.click(
-            fn=visualize_embeddings,
-            inputs=[viz_text, viz_method],
-            outputs=[viz_plot]
+            fn=visualize_embeddings, inputs=[viz_text, viz_method], outputs=[viz_plot]
         )
 
         matrix_btn.click(
-            fn=create_similarity_matrix,
-            inputs=[matrix_text],
-            outputs=[matrix_plot]
+            fn=create_similarity_matrix, inputs=[matrix_text], outputs=[matrix_plot]
         )
 
     return demo
@@ -545,9 +561,4 @@ def create_ui():
 
 if __name__ == "__main__":
     demo = create_ui()
-    demo.launch(
-        server_name="0.0.0.0",
-        server_port=7861,
-        share=False,
-        show_error=True
-    )
+    demo.launch(server_name="0.0.0.0", server_port=7861, share=False, show_error=True)

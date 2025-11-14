@@ -5,9 +5,9 @@ UI Launcher - Launch all NLP demo UIs
 This script provides an easy way to launch all available interactive UIs.
 """
 
-import sys
-import subprocess
 import argparse
+import subprocess
+import sys
 from pathlib import Path
 
 # Available UIs with their configurations
@@ -16,26 +16,26 @@ UIS = {
         "name": "Sentiment Analysis Playground",
         "file": "ui/sentiment_playground.py",
         "port": 7860,
-        "description": "Analyze sentiment with multiple models"
+        "description": "Analyze sentiment with multiple models",
     },
     "similarity": {
         "name": "Sentence Similarity Explorer",
         "file": "ui/similarity_explorer.py",
         "port": 7861,
-        "description": "Compare sentence embeddings and semantic similarity"
+        "description": "Compare sentence embeddings and semantic similarity",
     },
     "ner": {
         "name": "NER Visualizer",
         "file": "ui/ner_visualizer.py",
         "port": 7862,
-        "description": "Extract and visualize named entities"
+        "description": "Extract and visualize named entities",
     },
     "summarization": {
         "name": "Text Summarization Studio",
         "file": "ui/summarization_studio.py",
         "port": 7863,
-        "description": "Generate and compare text summaries"
-    }
+        "description": "Generate and compare text summaries",
+    },
 }
 
 
@@ -108,21 +108,18 @@ Available UIs:
   similarity     - Sentence Similarity Explorer
   ner            - Named Entity Recognition Visualizer
   summarization  - Text Summarization Studio
-        """
+        """,
     )
 
     parser.add_argument(
         "ui",
         nargs="?",
         choices=list(UIS.keys()),
-        help="UI to launch (sentiment, similarity, ner, summarization)"
+        help="UI to launch (sentiment, similarity, ner, summarization)",
     )
 
     parser.add_argument(
-        "--list",
-        "-l",
-        action="store_true",
-        help="List all available UIs"
+        "--list", "-l", action="store_true", help="List all available UIs"
     )
 
     args = parser.parse_args()
@@ -146,7 +143,7 @@ Available UIs:
         try:
             choice = input("UI> ").strip().lower()
 
-            if choice in ['q', 'quit', 'exit']:
+            if choice in ["q", "quit", "exit"]:
                 print("Goodbye!")
                 return 0
 

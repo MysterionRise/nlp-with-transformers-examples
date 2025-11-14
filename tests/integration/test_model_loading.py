@@ -1,4 +1,5 @@
 """Integration tests for model loading and basic operations"""
+
 import pytest
 
 
@@ -28,6 +29,7 @@ class TestModelLoading:
         """Test sentence transformers availability"""
         try:
             from sentence_transformers import SentenceTransformer
+
             assert SentenceTransformer is not None
         except ImportError:
             pytest.skip("sentence-transformers not installed")

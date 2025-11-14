@@ -1,4 +1,5 @@
 """Unit tests for launch_ui.py"""
+
 import sys
 from pathlib import Path
 from unittest.mock import Mock, patch
@@ -7,7 +8,7 @@ import pytest
 
 # Import the module under test
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
-from launch_ui import UIS, list_uis, launch_ui, print_banner
+from launch_ui import UIS, launch_ui, list_uis, print_banner
 
 
 class TestUIConfiguration:

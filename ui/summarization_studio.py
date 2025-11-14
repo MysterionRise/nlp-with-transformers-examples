@@ -9,11 +9,12 @@ Features:
 - Example articles for testing
 """
 
-import gradio as gr
-from transformers import AutoModelForSeq2SeqLM, AutoTokenizer, pipeline
 import logging
 import time
 from typing import Dict, List, Tuple
+
+import gradio as gr
+from transformers import AutoModelForSeq2SeqLM, AutoTokenizer, pipeline
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -40,7 +41,7 @@ def load_model(model_name: str):
             model_cache[model_name] = pipeline(
                 "summarization",
                 model=SUMMARIZATION_MODELS[model_name],
-                tokenizer=SUMMARIZATION_MODELS[model_name]
+                tokenizer=SUMMARIZATION_MODELS[model_name],
             )
             logger.info(f"Model {model_name} loaded successfully")
         except Exception as e:
@@ -62,7 +63,7 @@ def calculate_stats(original: str, summary: str) -> Dict[str, str]:
         "Original Length": f"{orig_words} words, {orig_chars} characters",
         "Summary Length": f"{summ_words} words, {summ_chars} characters",
         "Compression Ratio": f"{compression_ratio:.1f}%",
-        "Reduction": f"{orig_words - summ_words} words removed"
+        "Reduction": f"{orig_words - summ_words} words removed",
     }
 
 
@@ -71,7 +72,7 @@ def summarize_text(
     model_name: str,
     min_length: int,
     max_length: int,
-    do_sample: bool = False
+    do_sample: bool = False,
 ) -> Tuple[str, Dict, float]:
     """
     Summarize text using specified model
@@ -90,7 +91,11 @@ def summarize_text(
         return "Please provide some text to summarize", {}, 0.0
 
     if len(text.split()) < 30:
-        return "Text too short. Please provide at least 30 words for meaningful summarization.", {}, 0.0
+        return (
+            "Text too short. Please provide at least 30 words for meaningful summarization.",
+            {},
+            0.0,
+        )
 
     try:
         # Load model
@@ -111,8 +116,8 @@ def summarize_text(
             min_length=min_length,
             max_length=max_length,
             do_sample=do_sample,
-            truncation=True
-        )[0]['summary_text']
+            truncation=True,
+        )[0]["summary_text"]
 
         gen_time = time.time() - start_time
 
@@ -128,10 +133,7 @@ def summarize_text(
 
 
 def compare_models(
-    text: str,
-    models: List[str],
-    min_length: int,
-    max_length: int
+    text: str, models: List[str], min_length: int, max_length: int
 ) -> List[Tuple[str, str, Dict]]:
     """
     Compare multiple models on the same text
@@ -225,14 +227,14 @@ def create_ui():
                         label="Input Text",
                         placeholder="Paste your article or text here...",
                         lines=15,
-                        value=EXAMPLE_ARTICLE_1
+                        value=EXAMPLE_ARTICLE_1,
                     )
 
                     with gr.Row():
                         single_model = gr.Dropdown(
                             choices=list(SUMMARIZATION_MODELS.keys()),
                             value="BART Large CNN",
-                            label="Select Model"
+                            label="Select Model",
                         )
 
                     with gr.Row():
@@ -241,23 +243,20 @@ def create_ui():
                             maximum=100,
                             value=30,
                             step=5,
-                            label="Minimum Length (words)"
+                            label="Minimum Length (words)",
                         )
                         max_length = gr.Slider(
                             minimum=50,
                             maximum=300,
                             value=130,
                             step=10,
-                            label="Maximum Length (words)"
+                            label="Maximum Length (words)",
                         )
 
                     single_btn = gr.Button("Generate Summary", variant="primary")
 
                 with gr.Column(scale=2):
-                    summary_output = gr.Textbox(
-                        label="Generated Summary",
-                        lines=10
-                    )
+                    summary_output = gr.Textbox(label="Generated Summary", lines=10)
                     stats_output = gr.JSON(label="Statistics")
 
         with gr.Tab("Model Comparison"):
@@ -269,13 +268,13 @@ def create_ui():
                         label="Input Text",
                         placeholder="Paste your article or text here...",
                         lines=15,
-                        value=EXAMPLE_ARTICLE_2
+                        value=EXAMPLE_ARTICLE_2,
                     )
 
                     compare_models_select = gr.CheckboxGroup(
                         choices=list(SUMMARIZATION_MODELS.keys()),
                         value=["BART Large CNN", "T5 Large"],
-                        label="Select Models to Compare"
+                        label="Select Models to Compare",
                     )
 
                     with gr.Row():
@@ -284,14 +283,14 @@ def create_ui():
                             maximum=100,
                             value=30,
                             step=5,
-                            label="Min Length"
+                            label="Min Length",
                         )
                         compare_max = gr.Slider(
                             minimum=50,
                             maximum=300,
                             value=130,
                             step=10,
-                            label="Max Length"
+                            label="Max Length",
                         )
 
                     compare_btn = gr.Button("Compare Models", variant="primary")
@@ -365,38 +364,26 @@ def create_ui():
         single_btn.click(
             fn=lambda t, m, min_l, max_l: summarize_text(t, m, min_l, max_l)[:2],
             inputs=[single_text, single_model, min_length, max_length],
-            outputs=[summary_output, stats_output]
+            outputs=[summary_output, stats_output],
         )
 
         # Connect components - Model Comparison
         compare_btn.click(
-            fn=lambda t, m, min_l, max_l: format_comparison_results(compare_models(t, m, min_l, max_l)),
+            fn=lambda t, m, min_l, max_l: format_comparison_results(
+                compare_models(t, m, min_l, max_l)
+            ),
             inputs=[compare_text, compare_models_select, compare_min, compare_max],
-            outputs=[comparison_output]
+            outputs=[comparison_output],
         )
 
         # Copy example articles
-        copy_btn1.click(
-            fn=lambda: EXAMPLE_ARTICLE_1,
-            outputs=[single_text]
-        )
-        copy_btn2.click(
-            fn=lambda: EXAMPLE_ARTICLE_2,
-            outputs=[single_text]
-        )
-        copy_btn3.click(
-            fn=lambda: EXAMPLE_ARTICLE_3,
-            outputs=[single_text]
-        )
+        copy_btn1.click(fn=lambda: EXAMPLE_ARTICLE_1, outputs=[single_text])
+        copy_btn2.click(fn=lambda: EXAMPLE_ARTICLE_2, outputs=[single_text])
+        copy_btn3.click(fn=lambda: EXAMPLE_ARTICLE_3, outputs=[single_text])
 
     return demo
 
 
 if __name__ == "__main__":
     demo = create_ui()
-    demo.launch(
-        server_name="0.0.0.0",
-        server_port=7863,
-        share=False,
-        show_error=True
-    )
+    demo.launch(server_name="0.0.0.0", server_port=7863, share=False, show_error=True)

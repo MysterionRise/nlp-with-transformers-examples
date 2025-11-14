@@ -1,4 +1,5 @@
 """Unit tests for sentiment-analysis.py"""
+
 import sys
 from pathlib import Path
 
@@ -18,7 +19,7 @@ class TestPreprocessFunction:
 
         spec = importlib.util.spec_from_file_location(
             "sentiment_analysis",
-            Path(__file__).parent.parent.parent / "sentiment-analysis.py"
+            Path(__file__).parent.parent.parent / "sentiment-analysis.py",
         )
         module = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(module)
@@ -32,7 +33,7 @@ class TestPreprocessFunction:
 
         spec = importlib.util.spec_from_file_location(
             "sentiment_analysis",
-            Path(__file__).parent.parent.parent / "sentiment-analysis.py"
+            Path(__file__).parent.parent.parent / "sentiment-analysis.py",
         )
         module = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(module)
@@ -47,7 +48,7 @@ class TestPreprocessFunction:
 
         spec = importlib.util.spec_from_file_location(
             "sentiment_analysis",
-            Path(__file__).parent.parent.parent / "sentiment-analysis.py"
+            Path(__file__).parent.parent.parent / "sentiment-analysis.py",
         )
         module = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(module)
