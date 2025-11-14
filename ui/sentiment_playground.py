@@ -9,11 +9,12 @@ Features:
 - Example texts for quick testing
 """
 
-import gradio as gr
-from transformers import pipeline
-import plotly.graph_objects as go
-from typing import Dict, Tuple, List
 import logging
+from typing import Dict, List, Tuple
+
+import gradio as gr
+import plotly.graph_objects as go
+from transformers import pipeline
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -40,7 +41,7 @@ def load_model(model_name: str):
                 "sentiment-analysis",
                 model=SENTIMENT_MODELS[model_name],
                 tokenizer=SENTIMENT_MODELS[model_name],
-                top_k=None  # Return all scores
+                top_k=None,  # Return all scores
             )
             logger.info(f"Model {model_name} loaded successfully")
         except Exception as e:
@@ -76,32 +77,30 @@ def analyze_sentiment(text: str, model_name: str) -> Tuple[Dict, str]:
         scores = []
 
         for result in results:
-            label = result['label']
-            score = result['score']
+            label = result["label"]
+            score = result["score"]
             formatted_results[label] = f"{score:.4f} ({score*100:.2f}%)"
             labels.append(label)
             scores.append(score)
 
         # Get the top prediction
-        top_result = max(results, key=lambda x: x['score'])
-        formatted_results['Prediction'] = top_result['label']
-        formatted_results['Confidence'] = f"{top_result['score']*100:.2f}%"
+        top_result = max(results, key=lambda x: x["score"])
+        formatted_results["Prediction"] = top_result["label"]
+        formatted_results["Confidence"] = f"{top_result['score']*100:.2f}%"
 
         # Create visualization
-        fig = go.Figure(data=[
-            go.Bar(
-                x=scores,
-                y=labels,
-                orientation='h',
-                marker=dict(
-                    color=scores,
-                    colorscale='RdYlGn',
-                    showscale=False
-                ),
-                text=[f"{s*100:.1f}%" for s in scores],
-                textposition='auto',
-            )
-        ])
+        fig = go.Figure(
+            data=[
+                go.Bar(
+                    x=scores,
+                    y=labels,
+                    orientation="h",
+                    marker=dict(color=scores, colorscale="RdYlGn", showscale=False),
+                    text=[f"{s*100:.1f}%" for s in scores],
+                    textposition="auto",
+                )
+            ]
+        )
 
         fig.update_layout(
             title="Sentiment Confidence Scores",
@@ -109,7 +108,7 @@ def analyze_sentiment(text: str, model_name: str) -> Tuple[Dict, str]:
             yaxis_title="Sentiment",
             height=300,
             margin=dict(l=20, r=20, t=40, b=20),
-            xaxis=dict(range=[0, 1])
+            xaxis=dict(range=[0, 1]),
         )
 
         return formatted_results, fig
@@ -148,9 +147,10 @@ def analyze_batch(text: str, model_name: str, delimiter: str = "\n") -> str:
         results = []
         for i, txt in enumerate(texts, 1):
             pred = classifier(txt[:512])[0]
-            top = max(pred, key=lambda x: x['score'])
-            results.append(f"{i}. {txt[:50]}{'...' if len(txt) > 50 else ''}\n"
-                         f"   → {top['label']} ({top['score']*100:.2f}%)\n")
+            top = max(pred, key=lambda x: x["score"])
+            results.append(
+                f"{i}. {txt[:50]}{'...' if len(txt) > 50 else ''}\n" f"   → {top['label']} ({top['score']*100:.2f}%)\n"
+            )
 
         return "\n".join(results)
 
@@ -161,11 +161,23 @@ def analyze_batch(text: str, model_name: str, delimiter: str = "\n") -> str:
 
 # Example texts for testing
 EXAMPLES = [
-    ["This movie was absolutely fantastic! I loved every minute of it.", "Twitter RoBERTa (Multilingual)"],
-    ["I'm so disappointed with this product. Complete waste of money.", "Twitter RoBERTa (Multilingual)"],
-    ["The service was okay, nothing special but not terrible either.", "Twitter RoBERTa (Multilingual)"],
+    [
+        "This movie was absolutely fantastic! I loved every minute of it.",
+        "Twitter RoBERTa (Multilingual)",
+    ],
+    [
+        "I'm so disappointed with this product. Complete waste of money.",
+        "Twitter RoBERTa (Multilingual)",
+    ],
+    [
+        "The service was okay, nothing special but not terrible either.",
+        "Twitter RoBERTa (Multilingual)",
+    ],
     ["Best experience ever! Highly recommend to everyone!", "DistilBERT SST-2"],
-    ["This is the worst thing I've ever purchased. Terrible quality.", "BERT Base (SST-2)"],
+    [
+        "This is the worst thing I've ever purchased. Terrible quality.",
+        "BERT Base (SST-2)",
+    ],
 ]
 
 
@@ -188,12 +200,12 @@ def create_ui():
                     text_input = gr.Textbox(
                         label="Enter text to analyze",
                         placeholder="Type or paste your text here...",
-                        lines=5
+                        lines=5,
                     )
                     model_dropdown = gr.Dropdown(
                         choices=list(SENTIMENT_MODELS.keys()),
                         value="Twitter RoBERTa (Multilingual)",
-                        label="Select Model"
+                        label="Select Model",
                     )
                     analyze_btn = gr.Button("Analyze Sentiment", variant="primary")
 
@@ -204,7 +216,7 @@ def create_ui():
             gr.Examples(
                 examples=EXAMPLES,
                 inputs=[text_input, model_dropdown],
-                label="Try these examples"
+                label="Try these examples",
             )
 
         with gr.Tab("Batch Analysis"):
@@ -220,21 +232,17 @@ def create_ui():
                     batch_input = gr.Textbox(
                         label="Enter multiple texts (one per line)",
                         placeholder="Text 1\nText 2\nText 3\n...",
-                        lines=10
+                        lines=10,
                     )
                     batch_model = gr.Dropdown(
                         choices=list(SENTIMENT_MODELS.keys()),
                         value="Twitter RoBERTa (Multilingual)",
-                        label="Select Model"
+                        label="Select Model",
                     )
                     batch_btn = gr.Button("Analyze All", variant="primary")
 
                 with gr.Column():
-                    batch_output = gr.Textbox(
-                        label="Batch Results",
-                        lines=15,
-                        max_lines=20
-                    )
+                    batch_output = gr.Textbox(label="Batch Results", lines=15, max_lines=20)
 
         with gr.Tab("About"):
             gr.Markdown(
@@ -269,23 +277,14 @@ def create_ui():
         analyze_btn.click(
             fn=analyze_sentiment,
             inputs=[text_input, model_dropdown],
-            outputs=[output_json, output_plot]
+            outputs=[output_json, output_plot],
         )
 
-        batch_btn.click(
-            fn=analyze_batch,
-            inputs=[batch_input, batch_model],
-            outputs=[batch_output]
-        )
+        batch_btn.click(fn=analyze_batch, inputs=[batch_input, batch_model], outputs=[batch_output])
 
     return demo
 
 
 if __name__ == "__main__":
     demo = create_ui()
-    demo.launch(
-        server_name="0.0.0.0",
-        server_port=7860,
-        share=False,
-        show_error=True
-    )
+    demo.launch(server_name="0.0.0.0", server_port=7860, share=False, show_error=True)

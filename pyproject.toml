@@ -1,0 +1,30 @@
+[tool.black]
+line-length = 120
+target-version = ['py39', 'py310', 'py311', 'py312', 'py313']
+include = '\.pyi?$'
+extend-exclude = '''
+/(
+  # directories
+  \.eggs
+  | \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | venv
+  | _build
+  | buck-out
+  | build
+  | dist
+  | __pycache__
+)/
+'''
+
+[tool.isort]
+profile = "black"
+line_length = 120
+filter_files = true
+skip_gitignore = true
+
+[tool.pytest.ini_options]
+# Pytest config is in pytest.ini
