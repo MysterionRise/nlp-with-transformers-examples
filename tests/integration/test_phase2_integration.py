@@ -121,9 +121,10 @@ class TestModelCacheIntegration:
     def test_cache_with_error_handling(self, mock_pipeline):
         """Test cache handles loading errors gracefully"""
         # Reset cache singleton to ensure clean state
-        from utils.model_cache import ModelCache
+        from utils import model_cache
 
-        ModelCache._instance = None
+        model_cache.ModelCache._instance = None
+        model_cache._model_cache_instance = None
 
         mock_pipeline.side_effect = RuntimeError("Failed to load")
 
@@ -136,12 +137,13 @@ class TestModelCacheIntegration:
     @patch("utils.model_cache.pipeline")
     def test_cache_with_logging(self, mock_pipeline, caplog):
         """Test that cache operations are logged"""
+        # Reset cache singleton to ensure clean state
+        from utils import model_cache
+
+        model_cache.ModelCache._instance = None
+        model_cache._model_cache_instance = None
+
         mock_pipeline.return_value = Mock()
-
-        # Reset cache singleton
-        from utils.model_cache import ModelCache
-
-        ModelCache._instance = None
 
         with caplog.at_level("INFO"):
             try:
@@ -150,10 +152,8 @@ class TestModelCacheIntegration:
                 pytest.skip(f"Model loading dependencies not available: {e}")
 
         # Should have logging messages about model loading
-        # Check if ANY logs were captured
-        if len(caplog.records) == 0:
-            # If no logs captured, at least verify the function executed
-            assert mock_pipeline.called
+        # At minimum, verify the pipeline was called
+        assert mock_pipeline.called or len(caplog.records) > 0
 
 
 class TestErrorHandlingIntegration:

@@ -248,15 +248,22 @@ class TestLoggingIntegration:
         """Test complete logging flow to file"""
         with tempfile.TemporaryDirectory() as tmpdir:
             log_file = Path(tmpdir) / "integration.log"
-            logger = setup_logger("integration_test", level="INFO", log_file=log_file)
+            logger = setup_logger("integration_test_file", level="INFO", log_file=log_file)
 
             logger.info("Info message")
             logger.warning("Warning message")
             logger.error("Error message")
 
-            # Flush all handlers to ensure messages are written
+            # Flush and close all handlers to ensure messages are written
             for handler in logger.handlers:
                 handler.flush()
+                if hasattr(handler, 'close'):
+                    handler.close()
+
+            # Reopen file to ensure it's written
+            import logging
+
+            logging.shutdown()
 
             # Verify file exists and has content
             assert log_file.exists(), f"Log file not created at {log_file}"
