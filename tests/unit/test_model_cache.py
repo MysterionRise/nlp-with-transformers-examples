@@ -163,11 +163,10 @@ class TestModelCacheEviction:
     @patch("utils.model_cache.get_model_registry")
     def test_lru_eviction(self, mock_registry, mock_pipeline, fresh_cache):
         """Test that least recently used model is evicted"""
+
         # Create mock configs
         def create_config(name):
-            return ModelConfig(
-                name=name, model_id=f"test/{name}", task="text-classification", description="Test"
-            )
+            return ModelConfig(name=name, model_id=f"test/{name}", task="text-classification", description="Test")
 
         mock_registry.return_value.get_model.side_effect = lambda cat, key: create_config(key)
         mock_pipeline.side_effect = lambda **kwargs: Mock()
@@ -191,10 +190,9 @@ class TestModelCacheEviction:
     @patch("utils.model_cache.get_model_registry")
     def test_lru_access_updates_order(self, mock_registry, mock_pipeline, fresh_cache):
         """Test that accessing a model updates its position in LRU"""
+
         def create_config(name):
-            return ModelConfig(
-                name=name, model_id=f"test/{name}", task="text-classification", description="Test"
-            )
+            return ModelConfig(name=name, model_id=f"test/{name}", task="text-classification", description="Test")
 
         mock_registry.return_value.get_model.side_effect = lambda cat, key: create_config(key)
         mock_pipeline.side_effect = lambda **kwargs: Mock()
@@ -278,9 +276,7 @@ class TestModelCacheManagement:
         """Test warming up cache with multiple models"""
 
         def create_config(key):
-            return ModelConfig(
-                name=key, model_id=f"test/{key}", task="text-classification", description="Test"
-            )
+            return ModelConfig(name=key, model_id=f"test/{key}", task="text-classification", description="Test")
 
         mock_registry.return_value.get_model.side_effect = lambda cat, key: create_config(key)
         mock_pipeline.return_value = Mock()

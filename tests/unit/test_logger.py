@@ -257,7 +257,7 @@ class TestLoggingIntegration:
             # Flush and close all handlers to ensure messages are written
             for handler in logger.handlers:
                 handler.flush()
-                if hasattr(handler, 'close'):
+                if hasattr(handler, "close"):
                     handler.close()
 
             # Reopen file to ensure it's written
