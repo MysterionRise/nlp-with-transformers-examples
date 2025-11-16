@@ -3,6 +3,7 @@ Named Entity Recognition Visualizer - Interactive UI for NER
 
 Features:
 - Real-time entity extraction and highlighting
+- Support for both spaCy and GLiNER models
 - Entity type filtering
 - Entity statistics and counts
 - Export entities to CSV/JSON
@@ -18,6 +19,7 @@ import gradio as gr
 import pandas as pd
 import plotly.graph_objects as go
 import spacy
+from gliner import GLiNER
 from spacy import displacy
 
 # Set up logging
@@ -26,9 +28,10 @@ logger = logging.getLogger(__name__)
 
 # Model cache
 nlp_model = None
+gliner_model = None
 
 
-def load_model():
+def load_spacy_model():
     """Load Spacy NER model (lazy loading)"""
     global nlp_model
     if nlp_model is None:
@@ -47,13 +50,172 @@ def load_model():
     return nlp_model
 
 
-def extract_entities(text: str, entity_types: List[str] = None) -> Tuple[str, str, object, str]:
+def load_gliner_model(model_name="urchade/gliner_multi-v2.1"):
+    """Load GLiNER model (lazy loading)"""
+    global gliner_model
+    if gliner_model is None:
+        logger.info(f"Loading GLiNER model: {model_name}")
+        try:
+            gliner_model = GLiNER.from_pretrained(model_name)
+            logger.info("GLiNER model loaded successfully")
+        except Exception as e:
+            logger.error(f"Failed to load GLiNER model: {e}")
+            raise
+    return gliner_model
+
+
+def extract_entities_spacy(text: str, entity_types: List[str] = None) -> Tuple[str, List[Dict], Counter]:
     """
-    Extract named entities from text
+    Extract named entities using spaCy
 
     Args:
         text: Input text
         entity_types: List of entity types to display (None = all)
+
+    Returns:
+        Tuple of (HTML visualization, entities list, entity counts)
+    """
+    nlp = load_spacy_model()
+    doc = nlp(text)
+
+    # Filter entities if specific types requested
+    if entity_types and len(entity_types) > 0:
+        filtered_ents = [ent for ent in doc.ents if ent.label_ in entity_types]
+        doc.ents = filtered_ents
+
+    # Generate HTML visualization
+    html = displacy.render(doc, style="ent", page=False)
+
+    # Wrap HTML with styling
+    styled_html = f"""
+    <div style="padding: 20px; border: 1px solid #ddd; border-radius: 5px; background-color: #f9f9f9;">
+        {html}
+    </div>
+    """
+
+    # Extract entity information
+    entities = []
+    for ent in doc.ents:
+        entities.append(
+            {
+                "Text": ent.text,
+                "Type": ent.label_,
+                "Start": ent.start_char,
+                "End": ent.end_char,
+            }
+        )
+
+    # Count entity types
+    entity_counts = Counter([ent["Type"] for ent in entities]) if entities else Counter()
+
+    return styled_html, entities, entity_counts
+
+
+def extract_entities_gliner(
+    text: str, labels: List[str] = None, threshold: float = 0.5
+) -> Tuple[str, List[Dict], Counter]:
+    """
+    Extract named entities using GLiNER
+
+    Args:
+        text: Input text
+        labels: List of entity labels to extract
+        threshold: Confidence threshold for entity extraction
+
+    Returns:
+        Tuple of (HTML visualization, entities list, entity counts)
+    """
+    if labels is None or len(labels) == 0:
+        # Default entity types
+        labels = [
+            "person",
+            "organization",
+            "location",
+            "date",
+            "event",
+            "product",
+            "language",
+            "country",
+            "city",
+            "money",
+        ]
+
+    model = load_gliner_model()
+    predicted_entities = model.predict_entities(text, labels, threshold=threshold)
+
+    # Create HTML visualization similar to spaCy's displacy
+    html_parts = []
+    last_end = 0
+
+    for entity in sorted(predicted_entities, key=lambda x: x["start"]):
+        start = entity["start"]
+        end = entity["end"]
+        label = entity["label"].upper()
+
+        # Add text before entity
+        if start > last_end:
+            html_parts.append(text[last_end:start])
+
+        # Add highlighted entity
+        html_parts.append(
+            f'<mark style="background-color: #ddd; padding: 0.25em 0.4em; margin: 0 0.25em; '
+            f'line-height: 1; border-radius: 0.35em;">'
+            f"{text[start:end]}"
+            f'<span style="font-size: 0.8em; font-weight: bold; line-height: 1; '
+            f"border-radius: 0.35em; text-transform: uppercase; vertical-align: middle; "
+            f'margin-left: 0.5rem">{label}</span>'
+            f"</mark>"
+        )
+
+        last_end = end
+
+    # Add remaining text
+    if last_end < len(text):
+        html_parts.append(text[last_end:])
+
+    html_content = "".join(html_parts)
+    styled_html = f"""
+    <div style="padding: 20px; border: 1px solid #ddd; border-radius: 5px; background-color: #f9f9f9;
+                line-height: 2.5; direction: ltr">
+        {html_content}
+    </div>
+    """
+
+    # Extract entity information
+    entities = []
+    for ent in predicted_entities:
+        entities.append(
+            {
+                "Text": ent["text"],
+                "Type": ent["label"].upper(),
+                "Start": ent["start"],
+                "End": ent["end"],
+                "Score": round(ent["score"], 3),
+            }
+        )
+
+    # Count entity types
+    entity_counts = Counter([ent["Type"] for ent in entities]) if entities else Counter()
+
+    return styled_html, entities, entity_counts
+
+
+def extract_entities(
+    text: str,
+    model_type: str = "spacy",
+    entity_types: List[str] = None,
+    custom_labels: str = "",
+    threshold: float = 0.5,
+) -> Tuple[str, str, object, str]:
+    """
+    Extract named entities from text using selected model
+
+    Args:
+        text: Input text
+        model_type: Model to use ('spacy' or 'gliner')
+        entity_types: List of entity types to display (for spaCy)
+        custom_labels: Comma-separated custom labels (for GLiNER)
+        threshold: Confidence threshold (for GLiNER)
 
     Returns:
         Tuple of (HTML visualization, entities table, statistics plot, JSON export)
@@ -62,45 +224,20 @@ def extract_entities(text: str, entity_types: List[str] = None) -> Tuple[str, st
         return "Please provide some text to analyze", "", None, ""
 
     try:
-        # Load model and process text
-        nlp = load_model()
-        doc = nlp(text)
-
-        # Filter entities if specific types requested
-        if entity_types and len(entity_types) > 0:
-            # Filter document entities
-            filtered_ents = [ent for ent in doc.ents if ent.label_ in entity_types]
-            doc.ents = filtered_ents
-
-        # Generate HTML visualization
-        html = displacy.render(doc, style="ent", page=False)
-
-        # Wrap HTML with styling
-        styled_html = f"""
-        <div style="padding: 20px; border: 1px solid #ddd; border-radius: 5px; background-color: #f9f9f9;">
-            {html}
-        </div>
-        """
-
-        # Extract entity information
-        entities = []
-        for ent in doc.ents:
-            entities.append(
-                {
-                    "Text": ent.text,
-                    "Type": ent.label_,
-                    "Start": ent.start_char,
-                    "End": ent.end_char,
-                }
-            )
+        if model_type == "spacy":
+            styled_html, entities, entity_counts = extract_entities_spacy(text, entity_types)
+        else:  # gliner
+            # Parse custom labels if provided
+            if custom_labels and custom_labels.strip():
+                labels = [label.strip() for label in custom_labels.split(",")]
+            else:
+                labels = None
+            styled_html, entities, entity_counts = extract_entities_gliner(text, labels, threshold)
 
         # Create entities DataFrame
         if entities:
             df = pd.DataFrame(entities)
             entities_table = df.to_markdown(index=False)
-
-            # Count entity types
-            entity_counts = Counter([ent["Type"] for ent in entities])
 
             # Create bar chart
             fig = go.Figure(
@@ -145,7 +282,7 @@ def extract_entities(text: str, entity_types: List[str] = None) -> Tuple[str, st
 def get_entity_types():
     """Get list of available entity types from Spacy"""
     try:
-        nlp = load_model()
+        nlp = load_spacy_model()
         # Standard Spacy entity types
         entity_types = [
             "PERSON",  # People, including fictional
@@ -178,27 +315,34 @@ EXAMPLES = [
         "West Germany (German: Westdeutschland) is the colloquial English term used to indicate "
         "the Federal Republic of Germany (FRG) between its formation on 23 May 1949 and the German "
         "reunification on 3 October 1990. The FRG's provisional capital was the city of Bonn.",
+        "spacy",
         [],
+        "",
+        0.5,
     ],
     [
         "Apple Inc. was founded by Steve Jobs, Steve Wozniak, and Ronald Wayne in April 1976 in "
         "Cupertino, California. The company's first product was the Apple I computer.",
+        "gliner",
         [],
+        "person, organization, location, date, product",
+        0.5,
     ],
     [
         "The Eiffel Tower in Paris, France was built between 1887 and 1889 by Gustave Eiffel. "
         "It stands 330 meters tall and receives approximately 7 million visitors annually.",
+        "spacy",
         [],
+        "",
+        0.5,
     ],
     [
         "On July 20, 1969, Neil Armstrong became the first human to walk on the Moon during NASA's "
         "Apollo 11 mission. He was accompanied by Buzz Aldrin, while Michael Collins orbited above.",
+        "gliner",
         [],
-    ],
-    [
-        "Amazon.com, Inc. is an American multinational technology company based in Seattle, Washington. "
-        "It was founded by Jeff Bezos on July 5, 1994, and has become one of the world's most valuable companies.",
-        [],
+        "person, organization, date, event, location",
+        0.5,
     ],
 ]
 
@@ -213,8 +357,8 @@ def create_ui():
             """
             # 🏷️ Named Entity Recognition Visualizer
 
-            Extract and visualize named entities from text using state-of-the-art Spacy models.
-            Identify people, organizations, locations, dates, and more!
+            Extract and visualize named entities from text using state-of-the-art models.
+            Choose between **spaCy** (traditional NER) or **GLiNER** (zero-shot NER).
             """
         )
 
@@ -226,12 +370,37 @@ def create_ui():
                     lines=10,
                 )
 
+                model_selector = gr.Radio(
+                    choices=["spacy", "gliner"],
+                    value="spacy",
+                    label="Select NER Model",
+                    info="spaCy: Traditional NER | GLiNER: Zero-shot NER with custom labels",
+                )
+
                 with gr.Row():
-                    entity_filter = gr.CheckboxGroup(
-                        choices=entity_types,
-                        label="Filter Entity Types (leave empty for all)",
-                        value=[],
-                    )
+                    with gr.Column():
+                        entity_filter = gr.CheckboxGroup(
+                            choices=entity_types,
+                            label="Filter Entity Types (spaCy only)",
+                            value=[],
+                            visible=True,
+                        )
+
+                    with gr.Column():
+                        custom_labels_input = gr.Textbox(
+                            label="Custom Entity Labels (GLiNER only)",
+                            placeholder="person, organization, location, date, event",
+                            value="",
+                            visible=False,
+                        )
+                        threshold_slider = gr.Slider(
+                            minimum=0.0,
+                            maximum=1.0,
+                            value=0.5,
+                            step=0.05,
+                            label="Confidence Threshold (GLiNER only)",
+                            visible=False,
+                        )
 
                 analyze_btn = gr.Button("Extract Entities", variant="primary")
 
@@ -251,14 +420,39 @@ def create_ui():
         with gr.Accordion("Examples - Click to load", open=False):
             gr.Examples(
                 examples=EXAMPLES,
-                inputs=[text_input, entity_filter],
+                inputs=[text_input, model_selector, entity_filter, custom_labels_input, threshold_slider],
                 label="Try these examples",
+            )
+
+        with gr.Accordion("Model Comparison", open=False):
+            gr.Markdown(
+                """
+                ### spaCy vs GLiNER
+
+                **spaCy:**
+                - Traditional statistical NER model
+                - Pre-trained on standard entity types (18 types)
+                - Fast and accurate for common entities
+                - Great for: News articles, general text, standard entities
+
+                **GLiNER:**
+                - Zero-shot NER using transformers
+                - Custom entity labels - define any entity type!
+                - More flexible but requires more compute
+                - Great for: Domain-specific entities, custom categories, exploratory analysis
+
+                ### Tips:
+                - Start with spaCy for standard entity types
+                - Use GLiNER when you need custom entity categories
+                - Adjust GLiNER threshold if you get too many/few results
+                - GLiNER labels should be lowercase and descriptive
+                """
             )
 
         with gr.Accordion("Entity Type Guide", open=False):
             gr.Markdown(
                 """
-                ### Entity Types Explained:
+                ### spaCy Entity Types:
 
                 - **PERSON**: People, including fictional characters
                 - **NORP**: Nationalities, religious or political groups
@@ -279,10 +473,12 @@ def create_ui():
                 - **ORDINAL**: "first", "second", etc.
                 - **CARDINAL**: Numerals that don't fall under another type
 
-                ### Tips:
-                - Use entity type filters to focus on specific categories
-                - Export to JSON for further processing
-                - Longer, well-written texts typically yield better results
+                ### GLiNER Custom Labels:
+                You can use any labels you want! Examples:
+                - person, company, location, date
+                - disease, symptom, medication, dosage
+                - programming language, framework, library
+                - cuisine, ingredient, restaurant, chef
                 """
             )
 
@@ -291,13 +487,17 @@ def create_ui():
                 """
                 ## About This Tool
 
-                This NER visualizer uses **Spacy** with transformer-based models to identify
-                and classify named entities in text.
+                This NER visualizer supports two state-of-the-art approaches:
+
+                1. **Spacy** - Transformer-based traditional NER
+                2. **GLiNER** - Zero-shot NER with custom entity labels
 
                 ### Features:
                 - Real-time entity extraction
                 - Interactive entity highlighting
-                - Entity type filtering
+                - Model selection (spaCy/GLiNER)
+                - Custom entity labels (GLiNER)
+                - Entity type filtering (spaCy)
                 - Statistics and visualization
                 - JSON export for downstream processing
 
@@ -306,14 +506,27 @@ def create_ui():
                 - Content analysis and categorization
                 - Data mining and knowledge graph construction
                 - Privacy detection (identifying personal information)
-                - News article analysis
+                - Domain-specific entity extraction
                 """
             )
+
+        # Model selector change handlers
+        def update_visibility(model_type):
+            if model_type == "spacy":
+                return gr.update(visible=True), gr.update(visible=False), gr.update(visible=False)
+            else:  # gliner
+                return gr.update(visible=False), gr.update(visible=True), gr.update(visible=True)
+
+        model_selector.change(
+            fn=update_visibility,
+            inputs=[model_selector],
+            outputs=[entity_filter, custom_labels_input, threshold_slider],
+        )
 
         # Connect components
         analyze_btn.click(
             fn=extract_entities,
-            inputs=[text_input, entity_filter],
+            inputs=[text_input, model_selector, entity_filter, custom_labels_input, threshold_slider],
             outputs=[html_output, entities_table, stats_plot, json_output],
         )
 

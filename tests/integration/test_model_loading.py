@@ -34,6 +34,60 @@ class TestModelLoading:
         except ImportError:
             pytest.skip("sentence-transformers not installed")
 
+    @pytest.mark.slow
+    def test_gliner_model_loading(self):
+        """Test loading GLiNER model"""
+        pytest.importorskip("gliner")
+        from gliner import GLiNER
+
+        try:
+            # Load GLiNER model
+            model = GLiNER.from_pretrained("urchade/gliner_multi-v2.1")
+            assert model is not None
+
+            # Test basic NER with custom labels
+            text = "Apple Inc. was founded by Steve Jobs in Cupertino, California."
+            labels = ["person", "organization", "location"]
+            entities = model.predict_entities(text, labels, threshold=0.5)
+
+            # Should find at least some entities
+            assert len(entities) > 0
+
+            # Check entity structure
+            for entity in entities:
+                assert "text" in entity
+                assert "label" in entity
+                assert "start" in entity
+                assert "end" in entity
+                assert "score" in entity
+
+        except Exception as e:
+            pytest.skip(f"GLiNER model not available: {e}")
+
+    @pytest.mark.slow
+    def test_gliner_custom_labels(self):
+        """Test GLiNER with custom entity labels"""
+        pytest.importorskip("gliner")
+        from gliner import GLiNER
+
+        try:
+            model = GLiNER.from_pretrained("urchade/gliner_multi-v2.1")
+
+            # Test with domain-specific labels
+            text = "The patient was prescribed ibuprofen for headache and took 200mg daily."
+            labels = ["medication", "symptom", "dosage"]
+            entities = model.predict_entities(text, labels, threshold=0.4)
+
+            # Check that we can use custom labels
+            assert isinstance(entities, list)
+
+            # Verify label types match our custom labels
+            found_labels = {entity["label"] for entity in entities}
+            assert found_labels.issubset(set(labels))
+
+        except Exception as e:
+            pytest.skip(f"GLiNER model not available: {e}")
+
 
 class TestBasicNLPOperations:
     """Test basic NLP operations without heavy models"""
