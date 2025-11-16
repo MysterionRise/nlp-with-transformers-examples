@@ -1,7 +1,8 @@
 import argparse
+
 import spacy
-from spacy import displacy
 from gliner import GLiNER
+from spacy import displacy
 
 # Sample text for NER demonstration
 raw_text = (

@@ -19,8 +19,8 @@ import gradio as gr
 import pandas as pd
 import plotly.graph_objects as go
 import spacy
-from spacy import displacy
 from gliner import GLiNER
+from spacy import displacy
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
