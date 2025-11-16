@@ -160,9 +160,9 @@ def extract_entities_gliner(
         html_parts.append(
             f'<mark style="background-color: #ddd; padding: 0.25em 0.4em; margin: 0 0.25em; '
             f'line-height: 1; border-radius: 0.35em;">'
-            f'{text[start:end]}'
+            f"{text[start:end]}"
             f'<span style="font-size: 0.8em; font-weight: bold; line-height: 1; '
-            f'border-radius: 0.35em; text-transform: uppercase; vertical-align: middle; '
+            f"border-radius: 0.35em; text-transform: uppercase; vertical-align: middle; "
             f'margin-left: 0.5rem">{label}</span>'
             f"</mark>"
         )
