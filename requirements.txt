@@ -4,6 +4,7 @@ google-play-scraper
 sentencepiece
 protobuf==3.20.*
 spacy
+gliner
 
 # UI Frameworks
 gradio>=4.0.0
