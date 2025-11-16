@@ -1,0 +1,199 @@
+# Model Configuration for NLP Transformers Examples
+# This file contains all model definitions used across the application
+
+# Sentiment Analysis Models
+sentiment_analysis:
+  twitter_roberta_multilingual:
+    name: "Twitter RoBERTa (Multilingual)"
+    model_id: "cardiffnlp/twitter-xlm-roberta-base-sentiment"
+    task: "sentiment-analysis"
+    description: "Multilingual sentiment model trained on Twitter data"
+    languages: ["en", "es", "fr", "de", "it", "pt", "nl"]
+    max_length: 512
+
+  twitter_roberta_english:
+    name: "Twitter RoBERTa (English)"
+    model_id: "cardiffnlp/twitter-roberta-base-sentiment-latest"
+    task: "sentiment-analysis"
+    description: "English sentiment model optimized for social media text"
+    languages: ["en"]
+    max_length: 512
+
+  distilbert_sst2:
+    name: "DistilBERT SST-2"
+    model_id: "distilbert-base-uncased-finetuned-sst-2-english"
+    task: "sentiment-analysis"
+    description: "Lightweight sentiment model trained on SST-2 dataset"
+    languages: ["en"]
+    max_length: 512
+
+  bert_sst2:
+    name: "BERT Base (SST-2)"
+    model_id: "textattack/bert-base-uncased-SST-2"
+    task: "sentiment-analysis"
+    description: "BERT base model fine-tuned on SST-2"
+    languages: ["en"]
+    max_length: 512
+
+# Text Summarization Models
+summarization:
+  bart_large_cnn:
+    name: "BART Large CNN"
+    model_id: "facebook/bart-large-cnn"
+    task: "summarization"
+    description: "BART large model fine-tuned on CNN/DailyMail"
+    min_length: 30
+    max_length: 130
+
+  t5_large:
+    name: "T5 Large"
+    model_id: "t5-large"
+    task: "summarization"
+    description: "T5 large model for text-to-text generation"
+    min_length: 30
+    max_length: 130
+    prefix: "summarize: "
+
+  t5_base:
+    name: "T5 Base"
+    model_id: "t5-base"
+    task: "summarization"
+    description: "T5 base model (faster, smaller)"
+    min_length: 30
+    max_length: 130
+    prefix: "summarize: "
+
+  pegasus_xsum:
+    name: "Pegasus XSum"
+    model_id: "google/pegasus-xsum"
+    task: "summarization"
+    description: "Pegasus model trained on XSum dataset (extreme summarization)"
+    min_length: 20
+    max_length: 100
+
+  distilbart_cnn:
+    name: "DistilBART CNN"
+    model_id: "sshleifer/distilbart-cnn-12-6"
+    task: "summarization"
+    description: "Distilled version of BART (faster inference)"
+    min_length: 30
+    max_length: 130
+
+# Sentence Embedding Models
+embeddings:
+  all_minilm_l6:
+    name: "All-MiniLM-L6-v2"
+    model_id: "sentence-transformers/all-MiniLM-L6-v2"
+    task: "feature-extraction"
+    description: "Fast and efficient sentence embeddings"
+    dimensions: 384
+
+  all_mpnet_base:
+    name: "All-MPNet-Base-v2"
+    model_id: "sentence-transformers/all-mpnet-base-v2"
+    task: "feature-extraction"
+    description: "High quality sentence embeddings"
+    dimensions: 768
+
+  paraphrase_multilingual:
+    name: "Paraphrase Multilingual"
+    model_id: "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
+    task: "feature-extraction"
+    description: "Multilingual paraphrase model"
+    dimensions: 384
+    languages: ["en", "es", "fr", "de", "it", "pt", "nl", "zh", "ja", "ko"]
+
+# Named Entity Recognition Models
+ner:
+  spacy_sm:
+    name: "spaCy Small"
+    model_id: "en_core_web_sm"
+    task: "ner"
+    description: "Small spaCy model (fast)"
+    framework: "spacy"
+
+  spacy_trf:
+    name: "spaCy Transformer"
+    model_id: "en_core_web_trf"
+    task: "ner"
+    description: "Transformer-based spaCy model (accurate)"
+    framework: "spacy"
+
+  gliner_multi:
+    name: "GLiNER Multi v2.1"
+    model_id: "urchade/gliner_multi-v2.1"
+    task: "ner"
+    description: "Zero-shot NER with GLiNER"
+    framework: "gliner"
+
+# Question Answering Models
+question_answering:
+  distilbert_squad:
+    name: "DistilBERT SQuAD"
+    model_id: "distilbert-base-cased-distilled-squad"
+    task: "question-answering"
+    description: "Lightweight QA model trained on SQuAD"
+
+  roberta_squad:
+    name: "RoBERTa SQuAD"
+    model_id: "deepset/roberta-base-squad2"
+    task: "question-answering"
+    description: "RoBERTa fine-tuned on SQuAD 2.0"
+
+  bert_squad:
+    name: "BERT SQuAD"
+    model_id: "bert-large-uncased-whole-word-masking-finetuned-squad"
+    task: "question-answering"
+    description: "BERT large with whole word masking"
+
+# Text Generation Models
+text_generation:
+  gpt2:
+    name: "GPT-2"
+    model_id: "gpt2"
+    task: "text-generation"
+    description: "OpenAI's GPT-2 base model"
+    max_length: 100
+
+  gpt2_medium:
+    name: "GPT-2 Medium"
+    model_id: "gpt2-medium"
+    task: "text-generation"
+    description: "GPT-2 medium (better quality)"
+    max_length: 100
+
+  distilgpt2:
+    name: "DistilGPT-2"
+    model_id: "distilgpt2"
+    task: "text-generation"
+    description: "Distilled GPT-2 (faster)"
+    max_length: 100
+
+# Zero-Shot Classification Models
+zero_shot:
+  bart_large_mnli:
+    name: "BART Large MNLI"
+    model_id: "facebook/bart-large-mnli"
+    task: "zero-shot-classification"
+    description: "BART fine-tuned on MNLI for zero-shot classification"
+
+  deberta_mnli:
+    name: "DeBERTa MNLI"
+    model_id: "microsoft/deberta-v3-base"
+    task: "zero-shot-classification"
+    description: "DeBERTa for zero-shot classification"
+
+# Translation Models
+translation:
+  mbart_50:
+    name: "mBART-50"
+    model_id: "facebook/mbart-large-50-many-to-many-mmt"
+    task: "translation"
+    description: "Multilingual translation (50+ languages)"
+
+  helsinki_opus:
+    name: "Helsinki OPUS"
+    model_id: "Helsinki-NLP/opus-mt-{src}-{tgt}"
+    task: "translation"
+    description: "Language pair specific models"
+    template: true

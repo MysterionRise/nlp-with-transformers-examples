@@ -4,11 +4,19 @@ A collection of practical NLP examples inspired by [Natural Language Processing 
 
 ## 🎯 Features
 
-### Interactive UIs (New!)
+### Interactive UIs
 - 🎭 **Sentiment Analysis Playground** - Analyze sentiment with multiple models
 - 🔍 **Sentence Similarity Explorer** - Compare embeddings and semantic similarity
 - 🏷️ **NER Visualizer** - Extract and visualize named entities
 - 📝 **Text Summarization Studio** - Generate and compare text summaries
+- 📊 **Model Performance Dashboard** - Compare and evaluate model performance (NEW!)
+
+### Production-Ready Infrastructure (Phase 2 ✨)
+- ⚙️ **Centralized Configuration** - YAML-based model registry with 25+ pre-configured models
+- 🔄 **Smart Model Caching** - LRU cache with automatic GPU/CPU detection
+- 📝 **Structured Logging** - Colored console output with file rotation
+- 🛡️ **Error Handling** - Custom exceptions and graceful degradation
+- 🚀 **Performance Optimization** - Singleton patterns and lazy loading
 
 ### CLI Examples
 - Sentiment analysis on reviews
@@ -53,6 +61,7 @@ python launch_ui.py sentiment       # Sentiment Analysis
 python launch_ui.py similarity      # Sentence Similarity
 python launch_ui.py ner             # Named Entity Recognition
 python launch_ui.py summarization   # Text Summarization
+python launch_ui.py performance     # Model Performance Dashboard
 ```
 
 **Option 3: Direct Launch**
@@ -61,6 +70,7 @@ python ui/sentiment_playground.py      # Port 7860
 python ui/similarity_explorer.py       # Port 7861
 python ui/ner_visualizer.py           # Port 7862
 python ui/summarization_studio.py     # Port 7863
+python ui/performance_dashboard.py    # Port 7864
 ```
 
 ## 📚 Interactive UIs Overview
@@ -141,6 +151,87 @@ Generate concise summaries with multiple transformer models.
 - T5 Large/Base
 - Pegasus XSum
 - DistilBART CNN
+
+---
+
+### 📊 Model Performance Dashboard
+**Port:** 7864 | **File:** `ui/performance_dashboard.py`
+
+Compare and evaluate model outputs using comprehensive NLP metrics.
+
+**Features:**
+- Single and batch text comparison
+- Multiple evaluation metrics (BLEU, ROUGE, METEOR, BERTScore, Cosine Similarity)
+- Radar and bar chart visualizations
+- Model registry browser
+- Cache statistics viewer
+- JSON export functionality
+
+**Use Cases:**
+- Model evaluation and comparison
+- Quality assessment of generated text
+- Benchmarking different models
+- Research and experimentation
+
+---
+
+## 🏗️ Infrastructure Components
+
+### Configuration Management (`config/`)
+Centralized configuration system with YAML-based model registry:
+- **models.yaml**: 25+ pre-configured models across 8 categories
+- **settings.py**: Application settings with environment variable support
+- Pydantic validation for type safety
+
+```python
+from config import get_model_registry, get_settings
+
+# Access model configurations
+registry = get_model_registry()
+model_config = registry.get_model('sentiment_analysis', 'twitter_roberta_multilingual')
+
+# Access settings
+settings = get_settings()
+print(f"Device: {settings.device}, Max cached models: {settings.max_cached_models}")
+```
+
+### Model Cache (`utils/model_cache.py`)
+Intelligent model caching with LRU eviction:
+- Automatic GPU/CPU/MPS detection
+- Lazy loading (models loaded on first use)
+- Memory management with automatic cleanup
+- Thread-safe singleton pattern
+
+```python
+from utils import load_model
+
+# Models are cached automatically
+model = load_model('sentiment_analysis', 'twitter_roberta_multilingual')
+```
+
+### Error Handling (`utils/error_handler.py`)
+Custom exceptions and decorators for robust error handling:
+- `ModelLoadError`, `InferenceError`, `InvalidInputError`, etc.
+- `@handle_errors` decorator for graceful degradation
+- `@retry_on_error` decorator for transient failures
+- User-friendly error messages
+
+### Logging (`utils/logger.py`)
+Structured logging with colored console output:
+- Automatic log rotation
+- Performance tracking with `PerformanceLogger`
+- Configurable log levels
+- File and console handlers
+
+```python
+from utils import get_logger, PerformanceLogger
+
+logger = get_logger(__name__)
+with PerformanceLogger("model_inference", logger=logger):
+    result = model.predict(text)
+```
+
+---
 
 ## 🛠️ CLI Examples
 
