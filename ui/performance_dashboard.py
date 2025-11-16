@@ -321,9 +321,9 @@ def create_ui():
                         md += f"| {metric} | {score:.4f} |\n"
                     return md
 
-                eval_btn.click(
-                    fn=evaluate_text, inputs=[ref_input, cand_input], outputs=[scores_json]
-                ).then(fn=format_scores, inputs=[scores_json], outputs=[scores_md])
+                eval_btn.click(fn=evaluate_text, inputs=[ref_input, cand_input], outputs=[scores_json]).then(
+                    fn=format_scores, inputs=[scores_json], outputs=[scores_md]
+                )
 
             # Tab 2: Batch Comparison
             with gr.Tab("Batch Comparison"):
