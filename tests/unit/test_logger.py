@@ -122,9 +122,11 @@ class TestPerformanceLogger:
 
     def test_performance_logger_success(self, caplog):
         """Test PerformanceLogger with successful operation"""
+        import logging
+
         logger = get_logger("test_performance")
 
-        with caplog.at_level(logging.DEBUG):
+        with caplog.at_level(logging.DEBUG, logger="test_performance"):
             with PerformanceLogger("test_operation", logger=logger):
                 time.sleep(0.01)
 
@@ -137,7 +139,7 @@ class TestPerformanceLogger:
         """Test PerformanceLogger with error"""
         logger = get_logger("test_performance_error")
 
-        with caplog.at_level(logging.ERROR):
+        with caplog.at_level(logging.ERROR, logger="test_performance_error"):
             with pytest.raises(ValueError):
                 with PerformanceLogger("failing_operation", logger=logger):
                     raise ValueError("Test error")
@@ -171,7 +173,7 @@ class TestLogFunctionCall:
         def test_function(a, b):
             return a + b
 
-        with caplog.at_level(logging.DEBUG):
+        with caplog.at_level(logging.DEBUG, logger="test_func_call"):
             result = test_function(2, 3)
 
         assert result == 5
@@ -188,7 +190,7 @@ class TestLogFunctionCall:
         def test_function(a, b, multiplier=1):
             return (a + b) * multiplier
 
-        with caplog.at_level(logging.DEBUG):
+        with caplog.at_level(logging.DEBUG, logger="test_func_kwargs"):
             result = test_function(2, 3, multiplier=2)
 
         assert result == 10
@@ -204,7 +206,7 @@ class TestLogFunctionCall:
         def failing_function():
             raise ValueError("Test error")
 
-        with caplog.at_level(logging.ERROR):
+        with caplog.at_level(logging.ERROR, logger="test_func_error"):
             with pytest.raises(ValueError):
                 failing_function()
 
@@ -252,6 +254,12 @@ class TestLoggingIntegration:
             logger.warning("Warning message")
             logger.error("Error message")
 
+            # Flush all handlers to ensure messages are written
+            for handler in logger.handlers:
+                handler.flush()
+
+            # Verify file exists and has content
+            assert log_file.exists(), f"Log file not created at {log_file}"
             content = log_file.read_text()
             assert "Info message" in content
             assert "Warning message" in content
@@ -261,7 +269,7 @@ class TestLoggingIntegration:
         """Test PerformanceLogger with actual operations"""
         logger = get_logger("integration_perf")
 
-        with caplog.at_level(logging.DEBUG):
+        with caplog.at_level(logging.DEBUG, logger="integration_perf"):
             with PerformanceLogger("data_processing", logger=logger):
                 # Simulate some work
                 data = [i**2 for i in range(1000)]

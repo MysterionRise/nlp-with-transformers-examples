@@ -115,7 +115,11 @@ def handle_errors(
                     logger.error(
                         f"Error in {func.__name__}: {str(e)}",
                         exc_info=True,
-                        extra={"function": func.__name__, "args": str(args)[:100], "kwargs": str(kwargs)[:100]},
+                        extra={
+                            "function": func.__name__,
+                            "function_args": str(args)[:100],
+                            "function_kwargs": str(kwargs)[:100],
+                        },
                     )
 
                 if raise_error:
