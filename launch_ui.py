@@ -36,6 +36,12 @@ UIS = {
         "port": 7863,
         "description": "Generate and compare text summaries",
     },
+    "performance": {
+        "name": "Model Performance Dashboard",
+        "file": "ui/performance_dashboard.py",
+        "port": 7864,
+        "description": "Compare and evaluate model performance",
+    },
 }
 
 
@@ -108,6 +114,7 @@ Available UIs:
   similarity     - Sentence Similarity Explorer
   ner            - Named Entity Recognition Visualizer
   summarization  - Text Summarization Studio
+  performance    - Model Performance Dashboard
         """,
     )
 
@@ -115,7 +122,7 @@ Available UIs:
         "ui",
         nargs="?",
         choices=list(UIS.keys()),
-        help="UI to launch (sentiment, similarity, ner, summarization)",
+        help="UI to launch (sentiment, similarity, ner, summarization, performance)",
     )
 
     parser.add_argument("--list", "-l", action="store_true", help="List all available UIs")
