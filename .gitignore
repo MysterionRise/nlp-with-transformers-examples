@@ -13,6 +13,13 @@ coverage.xml
 .pytest_cache/
 .tox/
 
+# Test reports
+reports/
+.allure/
+allure-results/
+allure-report/
+.benchmarks/
+
 # Python
 __pycache__/
 *.py[cod]
