@@ -42,6 +42,36 @@ UIS = {
         "port": 7864,
         "description": "Compare and evaluate model performance",
     },
+    "qa": {
+        "name": "Question Answering System",
+        "file": "ui/qa_system.py",
+        "port": 7865,
+        "description": "Extract answers from context using QA models",
+    },
+    "generation": {
+        "name": "Text Generation Playground",
+        "file": "ui/generation_playground.py",
+        "port": 7866,
+        "description": "Generate creative text completions",
+    },
+    "zero_shot": {
+        "name": "Zero-Shot Classifier",
+        "file": "ui/zero_shot_classifier.py",
+        "port": 7867,
+        "description": "Classify text into custom categories without training data",
+    },
+    "translation": {
+        "name": "Translation Hub",
+        "file": "ui/translation_hub.py",
+        "port": 7868,
+        "description": "Translate between 50+ languages",
+    },
+    "vision": {
+        "name": "Vision-Language Explorer",
+        "file": "ui/vision_language_explorer.py",
+        "port": 7869,
+        "description": "Analyze images with vision-language models",
+    },
 }
 
 
@@ -106,6 +136,7 @@ def main():
         epilog="""
 Examples:
   python launch_ui.py sentiment              # Launch sentiment analysis UI
+  python launch_ui.py qa                     # Launch question answering UI
   python launch_ui.py --list                 # List all available UIs
   python launch_ui.py                        # Show menu to select UI
 
@@ -115,6 +146,11 @@ Available UIs:
   ner            - Named Entity Recognition Visualizer
   summarization  - Text Summarization Studio
   performance    - Model Performance Dashboard
+  qa             - Question Answering System
+  generation     - Text Generation Playground
+  zero_shot      - Zero-Shot Classifier
+  translation    - Translation Hub
+  vision         - Vision-Language Explorer
         """,
     )
 
@@ -122,7 +158,7 @@ Available UIs:
         "ui",
         nargs="?",
         choices=list(UIS.keys()),
-        help="UI to launch (sentiment, similarity, ner, summarization, performance)",
+        help="UI to launch (sentiment, similarity, ner, summarization, performance, qa, generation, zero_shot, translation, vision)",
     )
 
     parser.add_argument("--list", "-l", action="store_true", help="List all available UIs")

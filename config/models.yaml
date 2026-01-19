@@ -193,7 +193,43 @@ translation:
 
   helsinki_opus:
     name: "Helsinki OPUS"
-    model_id: "Helsinki-NLP/opus-mt-{src}-{tgt}"
+    model_id: "Helsinki-NLP/opus-mt-en-es"
     task: "translation"
-    description: "Language pair specific models"
-    template: true
+    description: "High quality language pair specific models"
+
+# Vision-Language Models
+vision_language:
+  clip_vit_base:
+    name: "CLIP ViT-B/32"
+    model_id: "openai/clip-vit-base-patch32"
+    task: "vision-language"
+    description: "Vision-language model for image-text alignment"
+    modalities: ["image", "text"]
+
+  clip_vit_large:
+    name: "CLIP ViT-L/14"
+    model_id: "openai/clip-vit-large-patch14"
+    task: "vision-language"
+    description: "Large vision-language model with better accuracy"
+    modalities: ["image", "text"]
+
+  llava_v1_5:
+    name: "LLaVA 1.5 (7B)"
+    model_id: "llava-hf/llava-1.5-7b-hf"
+    task: "visual-question-answering"
+    description: "Vision-language model for image captioning and VQA"
+    modalities: ["image", "text"]
+
+  git_base:
+    name: "GIT Base"
+    model_id: "microsoft/git-base"
+    task: "image-captioning"
+    description: "Generative Image-to-Text model"
+    modalities: ["image"]
+
+  git_large:
+    name: "GIT Large"
+    model_id: "microsoft/git-large"
+    task: "image-captioning"
+    description: "Large version of GIT for better caption quality"
+    modalities: ["image"]
