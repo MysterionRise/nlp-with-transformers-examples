@@ -309,8 +309,33 @@ def get_entity_types():
         return []
 
 
+# Industry-specific GLiNER label presets
+GLINER_PRESETS = {
+    # General
+    "General": "person, organization, location, date, event, product",
+    # Retail / E-commerce
+    "Retail: Products": "brand, product, price, feature, category, competitor",
+    "Retail: Reviews": "product name, brand, feature, issue, sentiment phrase",
+    "Retail: Customer Service": "customer name, order number, product, issue type, resolution",
+    # Publishing / Media
+    "Publishing: News": "person, organization, location, date, event, quote",
+    "Publishing: Books": "author, title, publisher, character, setting, genre",
+    "Publishing: Academic": "author, institution, journal, methodology, finding, citation",
+    # Life Sciences / Healthcare
+    "Medical: Clinical": "disease, symptom, medication, dosage, procedure, body part",
+    "Medical: Research": "drug, gene, protein, cell type, organism, biomarker",
+    "Medical: Adverse Events": "medication, adverse effect, severity, onset time, outcome",
+    # Financial
+    "Finance: Reports": "company, executive, revenue, profit, stock price, fiscal period",
+    "Finance: Transactions": "bank, account type, amount, currency, transaction type",
+    # Legal
+    "Legal: Contracts": "party, date, obligation, term, jurisdiction, signature",
+    "Legal: Cases": "plaintiff, defendant, court, judge, ruling, statute",
+}
+
 # Example texts
 EXAMPLES = [
+    # General examples
     [
         "West Germany (German: Westdeutschland) is the colloquial English term used to indicate "
         "the Federal Republic of Germany (FRG) between its formation on 23 May 1949 and the German "
@@ -328,20 +353,44 @@ EXAMPLES = [
         "person, organization, location, date, product",
         0.5,
     ],
+    # Retail example
     [
-        "The Eiffel Tower in Paris, France was built between 1887 and 1889 by Gustave Eiffel. "
-        "It stands 330 meters tall and receives approximately 7 million visitors annually.",
-        "spacy",
-        [],
-        "",
-        0.5,
-    ],
-    [
-        "On July 20, 1969, Neil Armstrong became the first human to walk on the Moon during NASA's "
-        "Apollo 11 mission. He was accompanied by Buzz Aldrin, while Michael Collins orbited above.",
+        "I bought the Samsung Galaxy S24 Ultra from Best Buy for $1,199. The camera quality is "
+        "excellent but battery life could be better. Compared to the iPhone 15 Pro Max, I think "
+        "Samsung offers better value. The 200MP sensor is a game-changer for mobile photography.",
         "gliner",
         [],
-        "person, organization, date, event, location",
+        "brand, product, price, feature, category, competitor",
+        0.5,
+    ],
+    # Publishing example
+    [
+        "In an exclusive interview with The New York Times, CEO Tim Cook announced that Apple "
+        "will invest $2 billion in AI research. The announcement was made at the company's "
+        "headquarters in Cupertino on January 15, 2024. 'This is the future of computing,' Cook said.",
+        "gliner",
+        [],
+        "person, organization, location, date, event, quote",
+        0.5,
+    ],
+    # Medical example
+    [
+        "Patient presents with type 2 diabetes mellitus and hypertension. Currently taking "
+        "Metformin 1000mg twice daily and Lisinopril 20mg once daily. Reports occasional dizziness "
+        "and fatigue. Blood pressure today: 145/92 mmHg. Recommend increasing Lisinopril to 40mg.",
+        "gliner",
+        [],
+        "disease, symptom, medication, dosage, procedure, body part",
+        0.5,
+    ],
+    # Financial example
+    [
+        "Goldman Sachs reported Q4 2023 revenue of $11.3 billion, exceeding analyst expectations. "
+        "CEO David Solomon highlighted strong performance in investment banking, with M&A advisory "
+        "fees up 25% year-over-year. The stock rose 3.5% to $385.20 in after-hours trading.",
+        "gliner",
+        [],
+        "company, executive, revenue, profit, stock price, fiscal period",
         0.5,
     ],
 ]
@@ -353,14 +402,12 @@ def create_ui():
     entity_types = get_entity_types()
 
     with gr.Blocks(title="NER Visualizer", theme=gr.themes.Soft()) as demo:
-        gr.Markdown(
-            """
+        gr.Markdown("""
             # 🏷️ Named Entity Recognition Visualizer
 
             Extract and visualize named entities from text using state-of-the-art models.
             Choose between **spaCy** (traditional NER) or **GLiNER** (zero-shot NER).
-            """
-        )
+            """)
 
         with gr.Row():
             with gr.Column(scale=2):
@@ -402,6 +449,69 @@ def create_ui():
                             visible=False,
                         )
 
+                # GLiNER label presets section
+                gliner_presets_section = gr.Column(visible=False)
+                with gliner_presets_section:
+                    gr.Markdown("### GLiNER Label Presets")
+                    gr.Markdown("*Click to load industry-specific entity labels:*")
+
+                    with gr.Row():
+                        gr.Markdown("**General & Retail:**")
+                    with gr.Row():
+                        for preset_name in [
+                            "General",
+                            "Retail: Products",
+                            "Retail: Reviews",
+                        ]:
+                            btn = gr.Button(preset_name.replace("Retail: ", ""), size="sm")
+                            btn.click(
+                                lambda x=GLINER_PRESETS[preset_name]: x,
+                                outputs=custom_labels_input,
+                            )
+
+                    with gr.Row():
+                        gr.Markdown("**Publishing & Media:**")
+                    with gr.Row():
+                        for preset_name in [
+                            "Publishing: News",
+                            "Publishing: Books",
+                            "Publishing: Academic",
+                        ]:
+                            btn = gr.Button(preset_name.replace("Publishing: ", ""), size="sm")
+                            btn.click(
+                                lambda x=GLINER_PRESETS[preset_name]: x,
+                                outputs=custom_labels_input,
+                            )
+
+                    with gr.Row():
+                        gr.Markdown("**Medical & Life Sciences:**")
+                    with gr.Row():
+                        for preset_name in [
+                            "Medical: Clinical",
+                            "Medical: Research",
+                            "Medical: Adverse Events",
+                        ]:
+                            btn = gr.Button(preset_name.replace("Medical: ", ""), size="sm")
+                            btn.click(
+                                lambda x=GLINER_PRESETS[preset_name]: x,
+                                outputs=custom_labels_input,
+                            )
+
+                    with gr.Row():
+                        gr.Markdown("**Finance & Legal:**")
+                    with gr.Row():
+                        for preset_name in [
+                            "Finance: Reports",
+                            "Legal: Contracts",
+                            "Legal: Cases",
+                        ]:
+                            short_name = preset_name.replace("Finance: ", "").replace("Legal: ", "")
+                            btn = gr.Button(short_name, size="sm")
+                            btn.click(
+                                lambda x=GLINER_PRESETS[preset_name]: x,
+                                outputs=custom_labels_input,
+                            )
+
                 analyze_btn = gr.Button("Extract Entities", variant="primary")
 
             with gr.Column(scale=2):
@@ -420,13 +530,18 @@ def create_ui():
         with gr.Accordion("Examples - Click to load", open=False):
             gr.Examples(
                 examples=EXAMPLES,
-                inputs=[text_input, model_selector, entity_filter, custom_labels_input, threshold_slider],
+                inputs=[
+                    text_input,
+                    model_selector,
+                    entity_filter,
+                    custom_labels_input,
+                    threshold_slider,
+                ],
                 label="Try these examples",
             )
 
         with gr.Accordion("Model Comparison", open=False):
-            gr.Markdown(
-                """
+            gr.Markdown("""
                 ### spaCy vs GLiNER
 
                 **spaCy:**
@@ -446,12 +561,10 @@ def create_ui():
                 - Use GLiNER when you need custom entity categories
                 - Adjust GLiNER threshold if you get too many/few results
                 - GLiNER labels should be lowercase and descriptive
-                """
-            )
+                """)
 
         with gr.Accordion("Entity Type Guide", open=False):
-            gr.Markdown(
-                """
+            gr.Markdown("""
                 ### spaCy Entity Types:
 
                 - **PERSON**: People, including fictional characters
@@ -479,12 +592,10 @@ def create_ui():
                 - disease, symptom, medication, dosage
                 - programming language, framework, library
                 - cuisine, ingredient, restaurant, chef
-                """
-            )
+                """)
 
         with gr.Accordion("About", open=False):
-            gr.Markdown(
-                """
+            gr.Markdown("""
                 ## About This Tool
 
                 This NER visualizer supports two state-of-the-art approaches:
@@ -507,26 +618,46 @@ def create_ui():
                 - Data mining and knowledge graph construction
                 - Privacy detection (identifying personal information)
                 - Domain-specific entity extraction
-                """
-            )
+                """)
 
         # Model selector change handlers
         def update_visibility(model_type):
             if model_type == "spacy":
-                return gr.update(visible=True), gr.update(visible=False), gr.update(visible=False)
+                return (
+                    gr.update(visible=True),
+                    gr.update(visible=False),
+                    gr.update(visible=False),
+                    gr.update(visible=False),
+                )
             else:  # gliner
-                return gr.update(visible=False), gr.update(visible=True), gr.update(visible=True)
+                return (
+                    gr.update(visible=False),
+                    gr.update(visible=True),
+                    gr.update(visible=True),
+                    gr.update(visible=True),
+                )
 
         model_selector.change(
             fn=update_visibility,
             inputs=[model_selector],
-            outputs=[entity_filter, custom_labels_input, threshold_slider],
+            outputs=[
+                entity_filter,
+                custom_labels_input,
+                threshold_slider,
+                gliner_presets_section,
+            ],
         )
 
         # Connect components
         analyze_btn.click(
             fn=extract_entities,
-            inputs=[text_input, model_selector, entity_filter, custom_labels_input, threshold_slider],
+            inputs=[
+                text_input,
+                model_selector,
+                entity_filter,
+                custom_labels_input,
+                threshold_slider,
+            ],
             outputs=[html_output, entities_table, stats_plot, json_output],
         )
 

@@ -11,7 +11,7 @@ Features:
 """
 
 import logging
-from typing import Dict, List, Tuple
+from typing import Dict, Tuple
 
 import gradio as gr
 import plotly.graph_objects as go
@@ -38,6 +38,25 @@ LABEL_PRESETS = {
     "Emotion": "joy, sadness, anger, surprise, fear, disgust",
     "Toxicity": "toxic, hateful, offensive, safe",
     "Language": "English, Spanish, French, German, Chinese",
+}
+
+# Industry-specific label presets
+INDUSTRY_PRESETS = {
+    # Retail / E-commerce
+    "Retail: Feedback Type": "complaint, praise, question, suggestion, return request",
+    "Retail: Issue Category": "shipping, product quality, pricing, customer service, website issue",
+    "Retail: Purchase Intent": "ready to buy, comparing options, just browsing, seeking information",
+    "Retail: Customer Sentiment": "satisfied, dissatisfied, neutral, frustrated, delighted",
+    # Publishing / Media
+    "Publishing: Article Type": "news, opinion, analysis, review, interview, breaking news",
+    "Publishing: Topic": "politics, business, technology, science, health, entertainment, sports",
+    "Publishing: Tone": "objective, persuasive, informative, sensational, critical",
+    "Publishing: Audience": "general public, experts, students, professionals, policymakers",
+    # Life Sciences / Healthcare
+    "Medical: Note Type": "diagnosis, treatment plan, progress note, discharge summary, consultation",
+    "Medical: Urgency": "emergency, urgent, routine, elective, preventive",
+    "Medical: Specialty": "cardiology, oncology, neurology, orthopedics, pediatrics, psychiatry",
+    "Medical: Clinical Intent": "symptom report, medication inquiry, test results, follow-up, adverse event",
 }
 
 
@@ -84,7 +103,7 @@ def classify_text(
     try:
         # Parse labels
         labels = [label.strip() for label in candidate_labels.split(",")]
-        labels = [l for l in labels if l]  # Remove empty strings
+        labels = [lbl for lbl in labels if lbl]  # Remove empty strings
 
         if not labels:
             return {"error": "Invalid label format"}, ""
@@ -103,10 +122,10 @@ def classify_text(
         formatted_results = {
             "Text": text[:200] + ("..." if len(text) > 200 else ""),
             "Top Classification": result["labels"][0],
-            "Confidence": f"{result['scores'][0]*100:.2f}%",
+            "Confidence": f"{result['scores'][0] * 100:.2f}%",
             "Model": model_name,
             "Multi-class": multi_class,
-            "All Scores": {label: f"{score*100:.2f}%" for label, score in zip(result["labels"], result["scores"])},
+            "All Scores": {label: f"{score * 100:.2f}%" for label, score in zip(result["labels"], result["scores"])},
         }
 
         # Create visualization
@@ -117,7 +136,7 @@ def classify_text(
                     y=result["labels"],
                     orientation="h",
                     marker=dict(color=result["scores"], colorscale="Viridis", showscale=False),
-                    text=[f"{s*100:.1f}%" for s in result["scores"]],
+                    text=[f"{s * 100:.1f}%" for s in result["scores"]],
                     textposition="auto",
                 )
             ]
@@ -168,7 +187,7 @@ def batch_classify(
     try:
         # Parse labels
         labels = [label.strip() for label in candidate_labels.split(",")]
-        labels = [l for l in labels if l]
+        labels = [lbl for lbl in labels if lbl]
 
         if not labels:
             return "Invalid label format"
@@ -192,7 +211,7 @@ def batch_classify(
 
                 results.append(
                     f"{i}. Text: {txt[:60]}{'...' if len(txt) > 60 else ''}\n"
-                    f"   Classification: {top_label} ({top_score*100:.2f}%)\n"
+                    f"   Classification: {top_label} ({top_score * 100:.2f}%)\n"
                 )
             except Exception as e:
                 results.append(f"{i}. Error: {str(e)}\n")
@@ -206,6 +225,7 @@ def batch_classify(
 
 # Example texts and labels for testing
 EXAMPLES = [
+    # General examples
     [
         "This movie was amazing! I loved every second of it.",
         "positive, negative, neutral",
@@ -218,15 +238,42 @@ EXAMPLES = [
         "BART Large MNLI",
         False,
     ],
+    # Retail examples
     [
-        "I'm really excited about the new AI developments in tech.",
-        "sports, politics, technology, entertainment, science",
-        "DeBERTa MNLI",
+        "I've been waiting 2 weeks for my order and customer service won't respond to my emails!",
+        "complaint, praise, question, suggestion, return request",
+        "BART Large MNLI",
         False,
     ],
     [
-        "I feel so sad and disappointed right now.",
-        "joy, sadness, anger, surprise, fear, disgust",
+        "The product quality is excellent but shipping took too long. Price was fair though.",
+        "shipping, product quality, pricing, customer service, website issue",
+        "BART Large MNLI",
+        True,  # Multi-class for multiple issues
+    ],
+    # Publishing examples
+    [
+        "The Federal Reserve announced today that interest rates will remain unchanged amid cooling inflation.",
+        "news, opinion, analysis, review, interview, breaking news",
+        "BART Large MNLI",
+        False,
+    ],
+    [
+        "In my view, the government's new climate policy falls short of what scientists recommend.",
+        "objective, persuasive, informative, sensational, critical",
+        "DeBERTa MNLI",
+        False,
+    ],
+    # Medical examples
+    [
+        "Patient presents with chest pain radiating to left arm, shortness of breath. ECG shows ST elevation.",
+        "emergency, urgent, routine, elective, preventive",
+        "BART Large MNLI",
+        False,
+    ],
+    [
+        "62-year-old male with history of hypertension started on Lisinopril 20mg daily. Follow-up in 2 weeks.",
+        "diagnosis, treatment plan, progress note, discharge summary, consultation",
         "BART Large MNLI",
         False,
     ],
@@ -237,14 +284,12 @@ def create_ui():
     """Create and configure the Gradio interface"""
 
     with gr.Blocks(title="Zero-Shot Classifier", theme=gr.themes.Soft()) as demo:
-        gr.Markdown(
-            """
+        gr.Markdown("""
             # 🏷️ Zero-Shot Classifier
 
             Classify text into any categories without training data!
             Simply provide your text and the labels you want to classify into.
-            """
-        )
+            """)
 
         with gr.Tab("Single Classification"):
             with gr.Row():
@@ -279,6 +324,7 @@ def create_ui():
                     output_plot = gr.Plot(label="Score Visualization")
 
             gr.Markdown("### Label Presets")
+            gr.Markdown("**General Presets:**")
             with gr.Row():
                 preset_buttons = []
                 for preset_name, preset_labels in LABEL_PRESETS.items():
@@ -288,6 +334,31 @@ def create_ui():
                 for preset_labels_text, btn in zip(LABEL_PRESETS.values(), preset_buttons):
                     btn.click(lambda x=preset_labels_text: x, outputs=labels_input)
 
+            gr.Markdown("**Industry Presets:**")
+            with gr.Row():
+                gr.Markdown("*Retail:*")
+            with gr.Row():
+                retail_presets = {k: v for k, v in INDUSTRY_PRESETS.items() if k.startswith("Retail:")}
+                for preset_name, preset_labels in retail_presets.items():
+                    btn = gr.Button(preset_name.replace("Retail: ", ""), size="sm")
+                    btn.click(lambda x=preset_labels: x, outputs=labels_input)
+
+            with gr.Row():
+                gr.Markdown("*Publishing:*")
+            with gr.Row():
+                publishing_presets = {k: v for k, v in INDUSTRY_PRESETS.items() if k.startswith("Publishing:")}
+                for preset_name, preset_labels in publishing_presets.items():
+                    btn = gr.Button(preset_name.replace("Publishing: ", ""), size="sm")
+                    btn.click(lambda x=preset_labels: x, outputs=labels_input)
+
+            with gr.Row():
+                gr.Markdown("*Medical/Life Sciences:*")
+            with gr.Row():
+                medical_presets = {k: v for k, v in INDUSTRY_PRESETS.items() if k.startswith("Medical:")}
+                for preset_name, preset_labels in medical_presets.items():
+                    btn = gr.Button(preset_name.replace("Medical: ", ""), size="sm")
+                    btn.click(lambda x=preset_labels: x, outputs=labels_input)
+
             gr.Examples(
                 examples=EXAMPLES,
                 inputs=[text_input, labels_input, model_dropdown, multi_class_toggle],
@@ -295,12 +366,10 @@ def create_ui():
             )
 
         with gr.Tab("Batch Classification"):
-            gr.Markdown(
-                """
+            gr.Markdown("""
                 ### Classify multiple texts at once
                 Enter multiple texts separated by new lines and provide candidate labels.
-                """
-            )
+                """)
 
             with gr.Row():
                 with gr.Column():
@@ -330,8 +399,7 @@ def create_ui():
             batch_output = gr.Textbox(label="Batch Results", lines=15, max_lines=20)
 
         with gr.Tab("About"):
-            gr.Markdown(
-                """
+            gr.Markdown("""
                 ## About This Tool
 
                 Zero-shot classification allows you to classify text into any categories
@@ -377,8 +445,7 @@ def create_ui():
                 - May struggle with very short texts
                 - Requires good label descriptions
                 - Computationally more expensive than supervised classification
-                """
-            )
+                """)
 
         # Connect the components
         classify_btn.click(

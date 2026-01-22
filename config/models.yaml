@@ -197,6 +197,90 @@ translation:
     task: "translation"
     description: "High quality language pair specific models"
 
+# Domain-Specific Models
+
+# Financial Sentiment Analysis
+financial_sentiment:
+  finbert:
+    name: "FinBERT"
+    model_id: "ProsusAI/finbert"
+    task: "sentiment-analysis"
+    description: "Financial sentiment analysis model trained on financial news"
+    languages: ["en"]
+    max_length: 512
+    domain: "finance"
+
+  finbert_tone:
+    name: "FinBERT Tone"
+    model_id: "yiyanghkust/finbert-tone"
+    task: "sentiment-analysis"
+    description: "FinBERT fine-tuned for financial tone classification"
+    languages: ["en"]
+    max_length: 512
+    domain: "finance"
+
+# Biomedical / Life Sciences Models
+biomedical:
+  pubmedbert:
+    name: "PubMedBERT"
+    model_id: "microsoft/BiomedNLP-PubMedBERT-base-uncased-abstract-fulltext"
+    task: "feature-extraction"
+    description: "BERT pre-trained on PubMed abstracts for biomedical NLP"
+    languages: ["en"]
+    max_length: 512
+    domain: "biomedical"
+
+  biobert:
+    name: "BioBERT"
+    model_id: "dmis-lab/biobert-v1.1"
+    task: "feature-extraction"
+    description: "BERT pre-trained on biomedical corpora (PubMed + PMC)"
+    languages: ["en"]
+    max_length: 512
+    domain: "biomedical"
+
+  scibert:
+    name: "SciBERT"
+    model_id: "allenai/scibert_scivocab_uncased"
+    task: "feature-extraction"
+    description: "BERT trained on scientific text from Semantic Scholar"
+    languages: ["en"]
+    max_length: 512
+    domain: "scientific"
+
+# Medical NER Models
+medical_ner:
+  biomedical_ner:
+    name: "BiomedNLP NER"
+    model_id: "d4data/biomedical-ner-all"
+    task: "ner"
+    description: "NER model for biomedical entities (diseases, drugs, genes)"
+    languages: ["en"]
+    domain: "biomedical"
+    entity_types: ["Disease", "Drug", "Gene", "Species"]
+
+# Legal Domain Models
+legal:
+  legal_bert:
+    name: "Legal-BERT"
+    model_id: "nlpaueb/legal-bert-base-uncased"
+    task: "feature-extraction"
+    description: "BERT pre-trained on legal documents"
+    languages: ["en"]
+    max_length: 512
+    domain: "legal"
+
+# Retail / E-commerce Models
+retail:
+  review_sentiment:
+    name: "Amazon Review Sentiment"
+    model_id: "nlptown/bert-base-multilingual-uncased-sentiment"
+    task: "sentiment-analysis"
+    description: "Multilingual sentiment model trained on product reviews (1-5 stars)"
+    languages: ["en", "de", "fr", "es", "it", "nl"]
+    max_length: 512
+    domain: "retail"
+
 # Vision-Language Models
 vision_language:
   clip_vit_base:

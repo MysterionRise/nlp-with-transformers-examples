@@ -1,0 +1,29 @@
+Context 1: The Eiffel Tower is located in Paris, France. It was built in 1889 for the World's Fair. The tower stands 330 meters tall and is made of iron lattice work. It has become one of the most recognizable landmarks in the world. Over 7 million people visit the Eiffel Tower each year, making it the world's most-visited paid monument. The tower was designed by Gustave Eiffel and his engineering company. It was originally intended to be a temporary structure but has become a permanent fixture in the Paris skyline.
+
+Question: Where is the Eiffel Tower located?
+Answer: Paris, France
+
+Context 2: Machine learning is a subset of artificial intelligence that enables computers to learn from data without being explicitly programmed. It uses algorithms to identify patterns and make predictions based on input data. There are three main types of machine learning: supervised learning, unsupervised learning, and reinforcement learning. Machine learning is widely used in applications like recommendation systems, image recognition, natural language processing, and autonomous vehicles. Modern machine learning relies heavily on deep neural networks and large datasets.
+
+Question: What are the three main types of machine learning?
+Answer: Supervised learning, unsupervised learning, and reinforcement learning
+
+Context 3: Python is a high-level programming language known for its simplicity and readability. It was created by Guido van Rossum and first released in 1991. Python is widely used in web development, data analysis, and artificial intelligence. The language emphasizes code readability and simplicity, making it popular among beginners. Python has a comprehensive standard library and a large ecosystem of third-party packages. As of 2024, Python is consistently ranked as one of the most popular programming languages in the world.
+
+Question: When was Python first released?
+Answer: 1991
+
+Context 4: The Great Wall of China is one of the most impressive structures in the world. Construction began in the 7th century BC and continued for centuries. The wall stretches over 13,000 miles (21,000 kilometers) and was built to protect against invasions from the north. The wall is made of brick and stone in most places, though in some sections it is made of tamped earth. Today, the Great Wall attracts millions of tourists from around the world and is a UNESCO World Heritage Site.
+
+Question: How long is the Great Wall of China?
+Answer: Over 13,000 miles (21,000 kilometers)
+
+Context 5: Climate change is a long-term shift in global temperatures and weather patterns, primarily caused by human activities such as burning fossil fuels. This releases greenhouse gases like carbon dioxide and methane into the atmosphere, trapping heat and warming the planet. The effects of climate change include rising sea levels, more frequent extreme weather events, disruption of ecosystems, and threats to food security. Many countries have committed to reducing their carbon emissions and transitioning to renewable energy sources to combat climate change.
+
+Question: What is the primary cause of climate change?
+Answer: Human activities such as burning fossil fuels
+
+Context 6: Artificial Intelligence (AI) is the simulation of human intelligence by machines, especially computer systems. AI systems can perform tasks that typically require human intelligence, such as learning from experience, recognizing patterns, understanding language, and making decisions. Machine learning, deep learning, and neural networks are key technologies driving advances in AI. Applications of AI include virtual assistants, autonomous vehicles, medical diagnosis systems, and game-playing algorithms. AI is rapidly transforming industries and is expected to have a major impact on society in the coming decades.
+
+Question: What are three key technologies driving advances in AI?
+Answer: Machine learning, deep learning, and neural networks

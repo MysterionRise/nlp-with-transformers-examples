@@ -1,7 +1,20 @@
-venv
-.idea
-.ipynb_checkpoints
-/data/
+# Virtual environments
+venv/
+.venv/
+test_venv/
+env/
+
+# IDE/Editor
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Data (keep sample data, ignore large files)
 results.json
 
 # Test coverage
@@ -34,4 +47,16 @@ wheels/
 *.egg-info/
 .installed.cfg
 *.egg
+
+# Logs
 logs/
+*.log
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# OS files
+.DS_Store
+Thumbs.db

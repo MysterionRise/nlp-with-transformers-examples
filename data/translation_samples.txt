@@ -1,0 +1,47 @@
+Sample 1 (English to Spanish):
+Hello, how are you today? I hope you're having a great day and that everything is going well for you.
+
+---
+
+Sample 2 (English to French):
+The weather is beautiful today. I think it would be a perfect time to go for a walk in the park.
+
+---
+
+Sample 3 (English to German):
+Machine learning is a fascinating field that combines computer science with statistics and mathematics. It enables computers to learn from data without explicit programming.
+
+---
+
+Sample 4 (English to Portuguese):
+Artificial intelligence is revolutionizing many industries, from healthcare to transportation. As AI technology continues to advance, we can expect even more innovative applications in the coming years.
+
+---
+
+Sample 5 (Spanish to English):
+El cambio climático es uno de los desafíos más importantes de nuestro tiempo. Necesitamos tomar medidas inmediatas para reducir las emisiones de gases de efecto invernadero.
+
+---
+
+Sample 6 (French to English):
+Les innovations technologiques transforment notre société à un rythme accéléré. L'intelligence artificielle, le machine learning et la robotique créent de nouvelles opportunités et de nouveaux défis.
+
+---
+
+Sample 7 (German to English):
+Die digitale Transformation ist ein wesentlicher Teil der modernen Wirtschaft. Unternehmen müssen sich anpassen, um wettbewerbsfähig zu bleiben und die Erwartungen der Kunden zu erfüllen.
+
+---
+
+Sample 8 (Italian to English):
+L'Italia è un paese ricco di storia, cultura e bellezze naturali. Dalle Alpi al Mediterraneo, il paesaggio italiano offre una varietà straordinaria di esperienze.
+
+---
+
+Sample 9 (English to Italian):
+Good morning! I hope you slept well and are ready for a productive day ahead. Remember to take breaks and drink plenty of water throughout the day.
+
+---
+
+Sample 10 (English to Chinese):
+Education is the foundation for personal growth and social development. Quality education empowers individuals and communities to build better futures for themselves.

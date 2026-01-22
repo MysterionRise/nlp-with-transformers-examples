@@ -1,0 +1,179 @@
+# Life Sciences Industry Demo Data - Clinical Notes and Medical Text
+# Use these examples for medical NER, clinical classification, and healthcare text analysis
+# NOTE: All data is synthetic/fictional for demonstration purposes only
+
+## Clinical Note 1 - Cardiology
+PATIENT ID: [REDACTED]
+DATE: 2024-01-15
+DEPARTMENT: Cardiology
+PHYSICIAN: Dr. Sarah Thompson, MD
+
+CHIEF COMPLAINT: Chest pain and shortness of breath for 3 days.
+
+HISTORY OF PRESENT ILLNESS: 62-year-old male with history of hypertension and type 2 diabetes mellitus presents with substernal chest pain radiating to left arm. Pain is described as pressure-like, 7/10 severity, worsening with exertion. Patient also reports dyspnea on exertion and mild ankle edema. Denies fever, cough, or recent illness.
+
+CURRENT MEDICATIONS:
+- Metformin 1000mg twice daily
+- Lisinopril 20mg daily
+- Atorvastatin 40mg at bedtime
+- Aspirin 81mg daily
+
+PHYSICAL EXAMINATION:
+- BP: 158/94 mmHg, HR: 88 bpm, RR: 18, SpO2: 96% on room air
+- Cardiovascular: Regular rhythm, S3 gallop present, no murmurs
+- Lungs: Bibasilar crackles
+
+ASSESSMENT: Acute coronary syndrome, rule out NSTEMI. Possible early heart failure.
+
+PLAN:
+1. Admit to cardiac care unit for monitoring
+2. Serial troponins every 6 hours
+3. Echocardiogram in AM
+4. Start heparin drip per protocol
+5. Cardiology consult for possible cardiac catheterization
+
+---
+
+## Clinical Note 2 - Oncology
+PATIENT ID: [REDACTED]
+DATE: 2024-01-18
+DEPARTMENT: Medical Oncology
+PHYSICIAN: Dr. Michael Rodriguez, MD, PhD
+
+CHIEF COMPLAINT: Follow-up for stage IIIA non-small cell lung cancer (NSCLC).
+
+HISTORY: 58-year-old female diagnosed with NSCLC adenocarcinoma in October 2023. Completed 4 cycles of carboplatin/pemetrexed chemotherapy. PET-CT shows partial response with 40% reduction in primary tumor size.
+
+CURRENT MEDICATIONS:
+- Ondansetron 8mg as needed for nausea
+- Dexamethasone 4mg daily (tapering)
+- Lorazepam 0.5mg as needed for anxiety
+- Omeprazole 20mg daily
+
+LABORATORY RESULTS:
+- WBC: 4.2 x10^9/L (normal)
+- Hemoglobin: 10.8 g/dL (mild anemia)
+- Platelets: 165 x10^9/L (normal)
+- Creatinine: 0.9 mg/dL (normal)
+- ALT/AST: Within normal limits
+
+ASSESSMENT: Partial response to first-line chemotherapy. ECOG performance status 1.
+
+PLAN:
+1. Continue maintenance pemetrexed 500mg/m2 every 3 weeks
+2. Refer for radiation oncology evaluation
+3. Repeat CT chest in 6 weeks
+4. Genetic testing for EGFR, ALK, ROS1 mutations pending
+5. Discuss clinical trial options for immunotherapy (pembrolizumab)
+
+---
+
+## Clinical Note 3 - Neurology
+PATIENT ID: [REDACTED]
+DATE: 2024-01-20
+DEPARTMENT: Neurology
+PHYSICIAN: Dr. Jennifer Park, MD
+
+CHIEF COMPLAINT: Progressive memory loss and confusion over 18 months.
+
+HISTORY OF PRESENT ILLNESS: 71-year-old female brought by daughter with concerns about worsening memory. Patient frequently misplaces items, repeats questions, and has gotten lost driving to familiar locations. MMSE score 22/30, indicating mild cognitive impairment. No history of stroke or head trauma.
+
+PAST MEDICAL HISTORY:
+- Hypothyroidism
+- Osteoporosis
+- Depression (treated)
+
+CURRENT MEDICATIONS:
+- Levothyroxine 75mcg daily
+- Alendronate 70mg weekly
+- Sertraline 50mg daily
+- Vitamin D 2000 IU daily
+
+NEUROLOGICAL EXAMINATION:
+- Alert, oriented to person only
+- Short-term memory impaired
+- Language fluent with occasional word-finding difficulty
+- No focal motor or sensory deficits
+- Gait normal
+
+IMAGING: MRI brain shows bilateral hippocampal atrophy and mild generalized cortical atrophy.
+
+ASSESSMENT: Probable Alzheimer's disease, mild stage.
+
+PLAN:
+1. Start donepezil 5mg daily, increase to 10mg after 4 weeks
+2. Neuropsychological testing referral
+3. Social work consult for caregiver support
+4. Discuss advance directives with family
+5. Follow-up in 3 months
+
+---
+
+## Drug Information Leaflet Example
+
+DRUG NAME: Metformin Hydrochloride
+BRAND NAMES: Glucophage, Fortamet, Glumetza
+DRUG CLASS: Biguanide antidiabetic agent
+FDA APPROVAL: 1994
+
+INDICATIONS: Type 2 diabetes mellitus as monotherapy or in combination with other antidiabetic agents. May be used for polycystic ovary syndrome (off-label).
+
+MECHANISM OF ACTION: Decreases hepatic glucose production, reduces intestinal absorption of glucose, and improves insulin sensitivity by increasing peripheral glucose uptake and utilization.
+
+DOSAGE AND ADMINISTRATION:
+- Initial: 500mg orally twice daily or 850mg once daily with meals
+- Maintenance: 2000-2550mg daily in divided doses
+- Maximum: 2550mg daily
+- Renal dosing: Contraindicated if eGFR <30 mL/min/1.73m2
+
+ADVERSE EFFECTS:
+- Common (>10%): Diarrhea, nausea, vomiting, flatulence, abdominal discomfort
+- Serious: Lactic acidosis (rare but potentially fatal), vitamin B12 deficiency
+
+CONTRAINDICATIONS:
+- Severe renal impairment (eGFR <30)
+- Metabolic acidosis including diabetic ketoacidosis
+- History of lactic acidosis
+- Acute or chronic conditions causing hypoxia
+
+DRUG INTERACTIONS:
+- Contrast dye: Withhold 48 hours before and after procedures
+- Alcohol: Increased risk of lactic acidosis
+- Carbonic anhydrase inhibitors: May increase metformin levels
+
+---
+
+## Research Abstract - Biomedical
+
+TITLE: CRISPR-Cas9 Gene Editing for Sickle Cell Disease: Long-term Outcomes from a Phase I/II Clinical Trial
+AUTHORS: Martinez JR, Chen WL, Okonkwo SE, et al.
+JOURNAL: New England Journal of Medicine
+DOI: 10.1056/NEJMoa2402891
+PUBLISHED: January 2024
+
+BACKGROUND: Sickle cell disease (SCD) is caused by a mutation in the HBB gene encoding beta-globin, resulting in abnormal hemoglobin S production. We report 3-year follow-up data from a gene editing trial using CRISPR-Cas9 to reactivate fetal hemoglobin (HbF) expression.
+
+METHODS: We enrolled 45 patients with severe SCD (ages 12-35) at 8 centers in the United States and Europe. Autologous CD34+ hematopoietic stem cells were edited ex vivo to disrupt the BCL11A erythroid enhancer, then reinfused after myeloablative conditioning with busulfan.
+
+RESULTS: At 36 months, 42/45 patients (93.3%) achieved sustained HbF levels >20% of total hemoglobin. Vaso-occlusive crises decreased from a median of 7.2 per year pre-treatment to 0.5 per year post-treatment (p<0.001). Thirty-eight patients (84.4%) were transfusion-independent at last follow-up. No cases of insertional mutagenesis or off-target editing were detected by whole-genome sequencing.
+
+CONCLUSIONS: CRISPR-Cas9 gene editing provides durable clinical benefit in patients with severe sickle cell disease. Longer follow-up is needed to assess durability and late adverse effects.
+
+FUNDING: National Institutes of Health (NIH), Vertex Pharmaceuticals
+
+---
+
+## Adverse Event Report Example
+
+REPORT TYPE: Serious Adverse Event
+REPORT DATE: 2024-01-19
+DRUG: Pembrolizumab (Keytruda) 200mg IV
+INDICATION: Metastatic melanoma
+
+EVENT DESCRIPTION: 54-year-old male developed grade 3 immune-related pneumonitis after 4th cycle of pembrolizumab. Presented with progressive dyspnea, dry cough, and hypoxia (SpO2 88% on room air). CT chest showed bilateral ground-glass opacities consistent with drug-induced pneumonitis.
+
+MANAGEMENT: Pembrolizumab discontinued. Started methylprednisolone 1mg/kg IV with gradual taper. Patient required supplemental oxygen for 5 days. Symptoms resolved over 3 weeks.
+
+OUTCOME: Recovered with residual mild dyspnea on exertion. Pembrolizumab permanently discontinued per label guidelines. Alternative therapy with ipilimumab/nivolumab combination being considered.
+
+CAUSALITY ASSESSMENT: Probable (Naranjo score 7)

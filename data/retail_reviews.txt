@@ -1,0 +1,52 @@
+# Retail Industry Demo Data - E-commerce Reviews and Customer Feedback
+# Use these examples for sentiment analysis, zero-shot classification, and NER demos
+
+## Product Reviews - Electronics
+
+I bought the Samsung Galaxy S24 Ultra last month and I'm absolutely thrilled with it! The camera quality is exceptional, especially in low light conditions. Battery life easily lasts a full day. Worth every penny of the $1,199 price tag.
+
+Terrible experience with this Bose QuietComfort headphones. They stopped working after just 2 weeks. Customer service at Best Buy was unhelpful and the return process took forever. Never buying from them again.
+
+The Apple MacBook Pro M3 is decent but overpriced at $2,499. Performance is good for video editing, but I expected better from Apple. The keyboard feels nice though.
+
+Just received my Sony WH-1000XM5 headphones from Amazon Prime. Fast shipping (2 days!) and the noise cancellation is incredible. Perfect for my daily commute. 5 stars!
+
+## Product Reviews - Fashion & Apparel
+
+Ordered Nike Air Max 270 in size 10 from Zappos. They run small - had to exchange for size 11. The exchange process was smooth and free shipping both ways. Comfortable once I got the right size.
+
+This Levi's 501 Original jeans is amazing quality! True to size, classic fit, and the denim feels durable. Been wearing Levi's for 20 years and they never disappoint. Purchased at Macy's for $59.99.
+
+Disappointed with the North Face winter jacket from REI. The zipper broke after one season. For $299, I expected much better quality. Contacted North Face warranty department but still waiting for response.
+
+Love my new Adidas Ultraboost running shoes! Super comfortable for my marathon training. The bounce technology really works. Got them on sale at Foot Locker for $140 instead of $190.
+
+## Customer Service Interactions
+
+I've been trying to get a refund for 3 weeks now. Order #78234 was delivered damaged and nobody at Target customer service seems to care. This is unacceptable!
+
+Huge shoutout to the Costco team! They replaced my defective KitchenAid mixer without any questions. This is why I've been a member for 15 years. Excellent customer service!
+
+Where is my order? Tracking shows it's been stuck in Chicago for 5 days. Walmart support just keeps telling me to wait. I needed this for my daughter's birthday which is tomorrow!
+
+Thank you Home Depot for the amazing in-store experience. The staff helped me find everything I needed for my bathroom renovation project. Very knowledgeable and friendly.
+
+## Product Complaints and Returns
+
+The IKEA MALM dresser arrived with missing parts and scratched surfaces. Assembly instructions were confusing. Had to spend 4 hours on what should have been 1 hour job. Requesting full refund.
+
+Returning this Instant Pot because it doesn't heat properly. The pressure valve seems defective. Amazon return process was easy though - just printed the label and dropped at UPS.
+
+Bought Dyson V15 vacuum for $749 and the suction is amazing but the battery only lasts 20 minutes, not 60 as advertised. Considering returning it.
+
+This Ninja blender is absolutely perfect! Makes smoothies in seconds, easy to clean, and looks great on my counter. Best kitchen purchase I've made. Highly recommend!
+
+## Shipping and Delivery Feedback
+
+FedEx left my $800 package on the porch in the rain without any notification. The contents were water damaged. Filed a claim but very frustrated with the whole situation.
+
+Impressed with Chewy's delivery service! Pet food arrived perfectly packaged and even included a handwritten note for my dog's birthday. Going above and beyond!
+
+UPS delivered to wrong address AGAIN. This is the third time this month. Had to track down my neighbor to get my package. Seriously considering switching to a PO Box.
+
+Amazon same-day delivery is a game changer. Ordered at 9 AM, package arrived by 3 PM. Living in Seattle has its perks!
