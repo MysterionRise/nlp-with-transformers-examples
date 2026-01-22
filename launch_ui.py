@@ -89,8 +89,8 @@ def list_uis():
     print()
     for key, info in UIS.items():
         print(f"  {key:15} - {info['name']}")
-        print(f"  {' '*15}   {info['description']}")
-        print(f"  {' '*15}   Port: {info['port']}")
+        print(f"  {' ' * 15}   {info['description']}")
+        print(f"  {' ' * 15}   Port: {info['port']}")
         print()
 
 
@@ -158,7 +158,8 @@ Available UIs:
         "ui",
         nargs="?",
         choices=list(UIS.keys()),
-        help="UI to launch (sentiment, similarity, ner, summarization, performance, qa, generation, zero_shot, translation, vision)",
+        help="UI to launch (sentiment, similarity, ner, summarization, performance, "
+        "qa, generation, zero_shot, translation, vision)",
     )
 
     parser.add_argument("--list", "-l", action="store_true", help="List all available UIs")

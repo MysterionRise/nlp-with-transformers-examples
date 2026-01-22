@@ -217,9 +217,12 @@ def batch_translate(
             for i, text in enumerate(texts, 1):
                 try:
                     result = translator(text, target_lang=tgt_code, max_length=400)
+                    orig_suffix = "..." if len(text) > 60 else ""
+                    trans_text = result[0]["translation_text"]
+                    trans_suffix = "..." if len(trans_text) > 80 else ""
                     results.append(
-                        f"{i}. Original: {text[:60]}{'...' if len(text) > 60 else ''}\n"
-                        f"   Translation: {result[0]['translation_text'][:80]}{'...' if len(result[0]['translation_text']) > 80 else ''}\n"
+                        f"{i}. Original: {text[:60]}{orig_suffix}\n"
+                        f"   Translation: {trans_text[:80]}{trans_suffix}\n"
                     )
                 except Exception as e:
                     results.append(f"{i}. Error: {str(e)}\n")
@@ -233,9 +236,12 @@ def batch_translate(
             for i, text in enumerate(texts, 1):
                 try:
                     result = translator(text, max_length=400)
+                    orig_suffix = "..." if len(text) > 60 else ""
+                    trans_text = result[0]["translation_text"]
+                    trans_suffix = "..." if len(trans_text) > 80 else ""
                     results.append(
-                        f"{i}. Original: {text[:60]}{'...' if len(text) > 60 else ''}\n"
-                        f"   Translation: {result[0]['translation_text'][:80]}{'...' if len(result[0]['translation_text']) > 80 else ''}\n"
+                        f"{i}. Original: {text[:60]}{orig_suffix}\n"
+                        f"   Translation: {trans_text[:80]}{trans_suffix}\n"
                     )
                 except Exception as e:
                     results.append(f"{i}. Error: {str(e)}\n")
@@ -271,14 +277,12 @@ def create_ui():
     """Create and configure the Gradio interface"""
 
     with gr.Blocks(title="Translation Hub", theme=gr.themes.Soft()) as demo:
-        gr.Markdown(
-            """
+        gr.Markdown("""
             # 🌍 Translation Hub
 
             Translate text between multiple languages using state-of-the-art neural translation models.
             Choose between multilingual mBART for 50+ languages or Helsinki OPUS for specific language pairs.
-            """
-        )
+            """)
 
         with gr.Tab("Translate"):
             model_choice = gr.Radio(
@@ -350,12 +354,10 @@ def create_ui():
             model_choice.change(update_visibility, model_choice, [mbart_group, helsinki_group])
 
         with gr.Tab("Batch Translation"):
-            gr.Markdown(
-                """
+            gr.Markdown("""
                 ### Translate multiple texts at once
                 Enter multiple texts (one per line) to translate all of them.
-                """
-            )
+                """)
 
             with gr.Row():
                 with gr.Column():
@@ -418,8 +420,7 @@ def create_ui():
             )
 
         with gr.Tab("About"):
-            gr.Markdown(
-                """
+            gr.Markdown("""
                 ## About This Tool
 
                 This translation hub provides access to state-of-the-art neural machine translation models.
@@ -477,8 +478,7 @@ def create_ui():
                 - Translating documentation
                 - Website localization
                 - Multilingual content analysis
-                """
-            )
+                """)
 
         # Connect mBART components
         mbart_btn.click(
@@ -497,7 +497,13 @@ def create_ui():
         # Connect batch components
         batch_btn.click(
             fn=batch_translate,
-            inputs=[batch_texts, batch_model_choice, batch_mbart_source, batch_mbart_target, batch_helsinki_pair],
+            inputs=[
+                batch_texts,
+                batch_model_choice,
+                batch_mbart_source,
+                batch_mbart_target,
+                batch_helsinki_pair,
+            ],
             outputs=[batch_output],
         )
 

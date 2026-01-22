@@ -50,7 +50,12 @@ class ModelNotFoundError(NLPError):
 class InferenceError(NLPError):
     """Raised when model inference fails"""
 
-    def __init__(self, model_name: str, input_text: str, original_error: Optional[Exception] = None):
+    def __init__(
+        self,
+        model_name: str,
+        input_text: str,
+        original_error: Optional[Exception] = None,
+    ):
         self.model_name = model_name
         self.input_text = input_text[:100]  # Limit text length
         self.original_error = original_error
@@ -136,7 +141,12 @@ def handle_errors(
     return decorator
 
 
-def retry_on_error(max_retries: int = 3, delay: float = 1.0, backoff: float = 2.0, exceptions: tuple = (Exception,)):
+def retry_on_error(
+    max_retries: int = 3,
+    delay: float = 1.0,
+    backoff: float = 2.0,
+    exceptions: tuple = (Exception,),
+):
     """
     Decorator to retry a function on error with exponential backoff
 
@@ -256,7 +266,9 @@ class ErrorContext:
             self.logger.debug(f"Completed: {self.operation}", extra=self.context)
         else:
             self.logger.error(
-                f"Failed: {self.operation} - {exc_val}", exc_info=(exc_type, exc_val, exc_tb), extra=self.context
+                f"Failed: {self.operation} - {exc_val}",
+                exc_info=(exc_type, exc_val, exc_tb),
+                extra=self.context,
             )
         # Don't suppress the exception
         return False
@@ -307,9 +319,11 @@ def get_error_suggestion(error: Exception) -> Optional[str]:
     suggestions = {
         MemoryError: "Try using a smaller model or reducing the batch size. Close other applications to free up memory.",
         FileNotFoundError: "Check that all required files are present and paths are correct.",
-        ModelLoadError: "Ensure you have internet connection for downloading models. Check if the model name is correct.",
+        ModelLoadError: (
+            "Ensure you have internet connection for downloading models. " "Check if the model name is correct."
+        ),
         InvalidInputError: "Review the input requirements and try again with valid input.",
-        ConnectionError: "Check your internet connection. Some models need to be downloaded from HuggingFace.",
+        ConnectionError: ("Check your internet connection. " "Some models need to be downloaded from HuggingFace."),
     }
 
     for error_type, suggestion in suggestions.items():

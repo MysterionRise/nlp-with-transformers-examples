@@ -30,7 +30,7 @@ def load_clip_model():
     if "clip" not in _models_cache:
         logger.info("Loading CLIP model...")
         try:
-            from transformers import CLIPProcessor, CLIPModel
+            from transformers import CLIPModel, CLIPProcessor
 
             model = CLIPModel.from_pretrained("openai/clip-vit-base-patch32")
             processor = CLIPProcessor.from_pretrained("openai/clip-vit-base-patch32")
@@ -47,7 +47,7 @@ def load_image_captioning_model():
     if "git" not in _models_cache:
         logger.info("Loading GIT image captioning model...")
         try:
-            from transformers import AutoProcessor, AutoModelForCausalLM
+            from transformers import AutoModelForCausalLM, AutoProcessor
 
             model = AutoModelForCausalLM.from_pretrained("microsoft/git-base")
             processor = AutoProcessor.from_pretrained("microsoft/git-base")
@@ -157,7 +157,10 @@ def calculate_clip_similarity(image: Image.Image, texts: List[str]) -> Tuple[Dic
         html = "<div style='padding: 10px;'>"
         html += "<h3>CLIP Similarity Scores</h3>"
         html += "<table style='width: 100%; border-collapse: collapse;'>"
-        html += "<tr style='background-color: #f0f0f0;'><th style='border: 1px solid #ddd; padding: 8px;'>Text Description</th>"
+        html += (
+            "<tr style='background-color: #f0f0f0;'>"
+            "<th style='border: 1px solid #ddd; padding: 8px;'>Text Description</th>"
+        )
         html += "<th style='border: 1px solid #ddd; padding: 8px;'>Similarity Score</th></tr>"
 
         for text, prob in zip(texts, probs[0]):
@@ -217,14 +220,12 @@ def create_ui():
     """Create and configure the Gradio interface"""
 
     with gr.Blocks(title="Vision-Language Explorer", theme=gr.themes.Soft()) as demo:
-        gr.Markdown(
-            """
+        gr.Markdown("""
             # 🖼️ Vision-Language Explorer
 
             Analyze images and understand their visual content using state-of-the-art vision-language models.
             Generate captions, calculate image-text similarity, and explore multi-modal embeddings!
-            """
-        )
+            """)
 
         with gr.Tab("Image Captioning"):
             gr.Markdown("### Generate natural language descriptions of images")
@@ -242,12 +243,10 @@ def create_ui():
                     caption_info = gr.Textbox(label="Caption Text", interactive=False)
 
         with gr.Tab("Image-Text Similarity"):
-            gr.Markdown(
-                """
+            gr.Markdown("""
                 ### Find the best text match for an image
                 Use CLIP to calculate similarity between an image and multiple text descriptions.
-                """
-            )
+                """)
 
             with gr.Row():
                 with gr.Column(scale=1):
@@ -267,12 +266,10 @@ def create_ui():
                     similarity_html = gr.HTML(label="Visualization")
 
         with gr.Tab("Batch Processing"):
-            gr.Markdown(
-                """
+            gr.Markdown("""
                 ### Generate captions for multiple images at once
                 Upload multiple images to generate captions for all of them.
-                """
-            )
+                """)
 
             with gr.Row():
                 with gr.Column():
@@ -287,8 +284,7 @@ def create_ui():
                     batch_output = gr.Textbox(label="Batch Results", lines=15, max_lines=25)
 
         with gr.Tab("About"):
-            gr.Markdown(
-                """
+            gr.Markdown("""
                 ## About This Tool
 
                 This vision-language explorer combines computer vision and natural language processing
@@ -346,8 +342,7 @@ def create_ui():
                 - Similarity matching depends on text descriptions provided
                 - Works best with natural images; struggles with diagrams/charts
                 - Performance varies by image quality and complexity
-                """
-            )
+                """)
 
         # Connect caption components
         def generate_caption_wrapper(image):

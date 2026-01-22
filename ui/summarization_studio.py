@@ -180,43 +180,94 @@ def format_comparison_results(results: List[Tuple[str, str, Dict]]) -> str:
 
 
 # Example articles
-EXAMPLE_ARTICLE_1 = """
-The Amazon rainforest, also known as Amazonia, is a moist broadleaf tropical rainforest in the Amazon biome that covers most of the Amazon basin of South America. This basin encompasses 7,000,000 km2 (2,700,000 sq mi), of which 5,500,000 km2 (2,100,000 sq mi) are covered by the rainforest. The majority of the forest is contained within Brazil, with 60% of the rainforest, followed by Peru with 13%, Colombia with 10%, and with minor amounts in Bolivia, Ecuador, French Guiana, Guyana, Suriname, and Venezuela.
+EXAMPLE_ARTICLE_1 = (
+    "The Amazon rainforest, also known as Amazonia, is a moist broadleaf tropical "
+    "rainforest in the Amazon biome that covers most of the Amazon basin of South "
+    "America. This basin encompasses 7,000,000 km2 (2,700,000 sq mi), of which "
+    "5,500,000 km2 (2,100,000 sq mi) are covered by the rainforest. The majority of "
+    "the forest is contained within Brazil, with 60% of the rainforest, followed by "
+    "Peru with 13%, Colombia with 10%, and with minor amounts in Bolivia, Ecuador, "
+    "French Guiana, Guyana, Suriname, and Venezuela.\n\n"
+    "The Amazon represents over half of the planet's remaining rainforests, and "
+    "comprises the largest and most biodiverse tract of tropical rainforest in the "
+    "world, with an estimated 390 billion individual trees divided into 16,000 species. "
+    "The region is home to about 2.5 million insect species, tens of thousands of "
+    "plants, and some 2,000 birds and mammals. To date, at least 40,000 plant species, "
+    "2,200 fishes, 1,294 birds, 427 mammals, 428 amphibians, and 378 reptiles have been "
+    "scientifically classified in the region.\n\n"
+    "The rainforest likely formed during the Eocene era, following the extinction event "
+    "which wiped out the dinosaurs. It appeared following a global reduction of tropical "
+    "temperatures when the Atlantic Ocean had widened sufficiently to provide a warm, "
+    "moist climate to the Amazon basin. The rainforest has been in existence for at "
+    "least 55 million years, and most of the region remained free of savanna-type biomes "
+    "during glacial periods, allowing for the survival and evolution of a broad diversity "
+    "of species."
+)
 
-The Amazon represents over half of the planet's remaining rainforests, and comprises the largest and most biodiverse tract of tropical rainforest in the world, with an estimated 390 billion individual trees divided into 16,000 species. The region is home to about 2.5 million insect species, tens of thousands of plants, and some 2,000 birds and mammals. To date, at least 40,000 plant species, 2,200 fishes, 1,294 birds, 427 mammals, 428 amphibians, and 378 reptiles have been scientifically classified in the region.
+EXAMPLE_ARTICLE_2 = (
+    "Artificial intelligence (AI) is intelligence demonstrated by machines, as opposed "
+    "to natural intelligence displayed by animals including humans. AI research has been "
+    "defined as the field of study of intelligent agents, which refers to any system that "
+    "perceives its environment and takes actions that maximize its chance of achieving "
+    'its goals. The term "artificial intelligence" had previously been used to describe '
+    'machines that mimic and display "human" cognitive skills that are associated with '
+    'the human mind, such as "learning" and "problem-solving". This definition has '
+    "since been rejected by major AI researchers who now describe AI in terms of "
+    "rationality and acting rationally, which does not limit how intelligence can be "
+    "articulated.\n\n"
+    "AI applications include advanced web search engines, recommendation systems, "
+    "understanding human speech, self-driving cars, generative or creative tools, "
+    "automated decision-making and competing at the highest level in strategic game "
+    "systems. As machines become increasingly capable, tasks considered to require "
+    '"intelligence" are often removed from the definition of AI, a phenomenon known '
+    "as the AI effect. For instance, optical character recognition is frequently excluded "
+    "from things considered to be AI, having become a routine technology.\n\n"
+    "Artificial intelligence was founded as an academic discipline in 1956, and in the "
+    "years since it has experienced several waves of optimism, followed by disappointment "
+    "and the loss of funding, followed by new approaches, success and renewed funding. "
+    "AI research has tried and discarded many different approaches, including simulating "
+    "the brain, modeling human problem solving, formal logic, large databases of knowledge "
+    "and imitating animal behavior. In the first decades of the 21st century, highly "
+    "mathematical and statistical machine learning has dominated the field, and this "
+    "technique has proved highly successful, helping to solve many challenging problems "
+    "throughout industry and academia."
+)
 
-The rainforest likely formed during the Eocene era, following the extinction event which wiped out the dinosaurs. It appeared following a global reduction of tropical temperatures when the Atlantic Ocean had widened sufficiently to provide a warm, moist climate to the Amazon basin. The rainforest has been in existence for at least 55 million years, and most of the region remained free of savanna-type biomes during glacial periods, allowing for the survival and evolution of a broad diversity of species.
-"""
-
-EXAMPLE_ARTICLE_2 = """
-Artificial intelligence (AI) is intelligence demonstrated by machines, as opposed to natural intelligence displayed by animals including humans. AI research has been defined as the field of study of intelligent agents, which refers to any system that perceives its environment and takes actions that maximize its chance of achieving its goals. The term "artificial intelligence" had previously been used to describe machines that mimic and display "human" cognitive skills that are associated with the human mind, such as "learning" and "problem-solving". This definition has since been rejected by major AI researchers who now describe AI in terms of rationality and acting rationally, which does not limit how intelligence can be articulated.
-
-AI applications include advanced web search engines, recommendation systems, understanding human speech, self-driving cars, generative or creative tools, automated decision-making and competing at the highest level in strategic game systems. As machines become increasingly capable, tasks considered to require "intelligence" are often removed from the definition of AI, a phenomenon known as the AI effect. For instance, optical character recognition is frequently excluded from things considered to be AI, having become a routine technology.
-
-Artificial intelligence was founded as an academic discipline in 1956, and in the years since it has experienced several waves of optimism, followed by disappointment and the loss of funding, followed by new approaches, success and renewed funding. AI research has tried and discarded many different approaches, including simulating the brain, modeling human problem solving, formal logic, large databases of knowledge and imitating animal behavior. In the first decades of the 21st century, highly mathematical and statistical machine learning has dominated the field, and this technique has proved highly successful, helping to solve many challenging problems throughout industry and academia.
-"""
-
-EXAMPLE_ARTICLE_3 = """
-Climate change refers to long-term shifts in temperatures and weather patterns. Such shifts can be natural, due to changes in the sun's activity or large volcanic eruptions. But since the 1800s, human activities have been the main driver of climate change, primarily due to the burning of fossil fuels like coal, oil, and gas. Burning fossil fuels generates greenhouse gas emissions that act like a blanket wrapped around the Earth, trapping the sun's heat and raising temperatures.
-
-The main greenhouse gases that are causing climate change include carbon dioxide and methane. These come from using gasoline for driving a car or coal for heating a building, for example. Clearing land and cutting down forests can also release carbon dioxide. Agriculture, oil and gas operations are major sources of methane emissions. Energy, industry, transport, buildings, agriculture and land use are among the main sectors causing greenhouse gases.
-
-The consequences of climate change now include intense droughts, water scarcity, severe fires, rising sea levels, flooding, melting polar ice, catastrophic storms and declining biodiversity. People are experiencing climate change in diverse ways. It affects our health, ability to grow food, housing, safety and work. Some of us are already more vulnerable to climate impacts, such as people living in small island nations and other developing countries. Conditions like sea-level rise and saltwater intrusion have advanced to the point where whole communities have had to relocate, and protracted droughts are putting people at risk of famine. In the future, the number of climate refugees is expected to rise.
-"""
+EXAMPLE_ARTICLE_3 = (
+    "Climate change refers to long-term shifts in temperatures and weather patterns. "
+    "Such shifts can be natural, due to changes in the sun's activity or large volcanic "
+    "eruptions. But since the 1800s, human activities have been the main driver of "
+    "climate change, primarily due to the burning of fossil fuels like coal, oil, and "
+    "gas. Burning fossil fuels generates greenhouse gas emissions that act like a blanket "
+    "wrapped around the Earth, trapping the sun's heat and raising temperatures.\n\n"
+    "The main greenhouse gases that are causing climate change include carbon dioxide and "
+    "methane. These come from using gasoline for driving a car or coal for heating a "
+    "building, for example. Clearing land and cutting down forests can also release "
+    "carbon dioxide. Agriculture, oil and gas operations are major sources of methane "
+    "emissions. Energy, industry, transport, buildings, agriculture and land use are "
+    "among the main sectors causing greenhouse gases.\n\n"
+    "The consequences of climate change now include intense droughts, water scarcity, "
+    "severe fires, rising sea levels, flooding, melting polar ice, catastrophic storms "
+    "and declining biodiversity. People are experiencing climate change in diverse ways. "
+    "It affects our health, ability to grow food, housing, safety and work. Some of us "
+    "are already more vulnerable to climate impacts, such as people living in small "
+    "island nations and other developing countries. Conditions like sea-level rise and "
+    "saltwater intrusion have advanced to the point where whole communities have had to "
+    "relocate, and protracted droughts are putting people at risk of famine. In the "
+    "future, the number of climate refugees is expected to rise."
+)
 
 
 def create_ui():
     """Create and configure the Gradio interface"""
 
     with gr.Blocks(title="Text Summarization Studio", theme=gr.themes.Soft()) as demo:
-        gr.Markdown(
-            """
+        gr.Markdown("""
             # 📝 Text Summarization Studio
 
             Generate concise summaries from long-form text using state-of-the-art transformer models.
             Compare different models and fine-tune parameters for optimal results!
-            """
-        )
+            """)
 
         with gr.Tab("Single Model"):
             gr.Markdown("### Summarize text with a single model")
@@ -315,8 +366,7 @@ def create_ui():
                     copy_btn3 = gr.Button("Use This Article")
 
         with gr.Tab("About"):
-            gr.Markdown(
-                """
+            gr.Markdown("""
                 ## About Text Summarization Studio
 
                 This tool provides state-of-the-art text summarization using transformer-based models.
@@ -357,8 +407,7 @@ def create_ui():
                 - Content curation
                 - Information extraction
                 - Quick reading/scanning
-                """
-            )
+                """)
 
         # Connect components - Single Model
         single_btn.click(

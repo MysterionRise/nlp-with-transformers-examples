@@ -101,9 +101,7 @@ class TestNewUIsIntegration:
 
         # Mock the model
         mock_model = MagicMock()
-        mock_model.return_value = [
-            {"generated_text": "The future of AI is bright and promising"}
-        ]
+        mock_model.return_value = [{"generated_text": "The future of AI is bright and promising"}]
         mock_pipeline.return_value = mock_model
 
         # Test model loading
@@ -140,15 +138,11 @@ class TestNewUIsIntegration:
         assert model is not None
 
         # Test classification
-        result, fig = classify_text(
-            "This is great!", "positive, negative, neutral", "BART Large MNLI"
-        )
+        result, fig = classify_text("This is great!", "positive, negative, neutral", "BART Large MNLI")
         assert "Top Classification" in result
 
         # Test batch classification
-        batch_result = batch_classify(
-            "Great!\nTerrible.", "positive, negative", "BART Large MNLI"
-        )
+        batch_result = batch_classify("Great!\nTerrible.", "positive, negative", "BART Large MNLI")
         assert "1. Text:" in batch_result
 
         # Test UI creation
@@ -171,9 +165,7 @@ class TestNewUIsIntegration:
         assert "Translation" in result
 
         # Test batch translation
-        batch_result = batch_translate(
-            "Hello\nWorld", "mbart", "English", "Spanish"
-        )
+        batch_result = batch_translate("Hello\nWorld", "mbart", "English", "Spanish")
         assert "1. Original:" in batch_result
 
         # Test UI creation

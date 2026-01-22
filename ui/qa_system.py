@@ -66,11 +66,15 @@ def highlight_answer(context: str, answer: str, start_char: int, end_char: int) 
         highlighted = context[start_char:end_char]
         after = context[end_char:]
 
-        html = f"""
-        <div style="padding: 10px; background-color: #f5f5f5; border-radius: 5px; line-height: 1.8;">
-            {before}<mark style="background-color: #FFD700; padding: 2px 4px; border-radius: 3px;">{highlighted}</mark>{after}
-        </div>
-        """
+        mark_style = "background-color: #FFD700; padding: 2px 4px; border-radius: 3px;"
+        html = (
+            f'<div style="padding: 10px; background-color: #f5f5f5; '
+            f'border-radius: 5px; line-height: 1.8;">'
+            f"{before}"
+            f'<mark style="{mark_style}">{highlighted}</mark>'
+            f"{after}"
+            f"</div>"
+        )
         return html
     except Exception as e:
         logger.error(f"Error highlighting answer: {e}")
@@ -108,7 +112,7 @@ def answer_question(context: str, question: str, model_name: str) -> Tuple[Dict,
         # Format results
         formatted_results = {
             "Answer": result["answer"],
-            "Confidence": f"{result['score']*100:.2f}%",
+            "Confidence": f"{result['score'] * 100:.2f}%",
             "Start": result["start"],
             "End": result["end"],
         }
@@ -191,7 +195,7 @@ def batch_answer(batch_text: str, model_name: str, delimiter: str = "\n---\n") -
                 results.append(
                     f"{i}. Q: {question[:60]}{'...' if len(question) > 60 else ''}\n"
                     f"   A: {answer_result['answer']}\n"
-                    f"   Confidence: {answer_result['score']*100:.2f}%\n"
+                    f"   Confidence: {answer_result['score'] * 100:.2f}%\n"
                 )
             except Exception as e:
                 results.append(f"{i}. Error processing pair: {str(e)}\n")
@@ -206,22 +210,42 @@ def batch_answer(batch_text: str, model_name: str, delimiter: str = "\n---\n") -
 # Example context and questions for testing
 EXAMPLES = [
     [
-        "The Eiffel Tower is located in Paris, France. It was built in 1889 for the World's Fair. The tower stands 330 meters tall and is made of iron lattice work. It has become one of the most recognizable landmarks in the world.",
+        (
+            "The Eiffel Tower is located in Paris, France. It was built in 1889 for "
+            "the World's Fair. The tower stands 330 meters tall and is made of iron "
+            "lattice work. It has become one of the most recognizable landmarks in "
+            "the world."
+        ),
         "Where is the Eiffel Tower located?",
         "DistilBERT SQuAD",
     ],
     [
-        "Machine learning is a subset of artificial intelligence that enables computers to learn from data without being explicitly programmed. It uses algorithms to identify patterns and make predictions based on input data.",
+        (
+            "Machine learning is a subset of artificial intelligence that enables "
+            "computers to learn from data without being explicitly programmed. It "
+            "uses algorithms to identify patterns and make predictions based on "
+            "input data."
+        ),
         "What is machine learning?",
         "DistilBERT SQuAD",
     ],
     [
-        "Python is a high-level programming language known for its simplicity and readability. It was created by Guido van Rossum and first released in 1991. Python is widely used in web development, data analysis, and artificial intelligence.",
+        (
+            "Python is a high-level programming language known for its simplicity "
+            "and readability. It was created by Guido van Rossum and first released "
+            "in 1991. Python is widely used in web development, data analysis, and "
+            "artificial intelligence."
+        ),
         "When was Python first released?",
         "RoBERTa SQuAD",
     ],
     [
-        "The Great Wall of China is one of the most impressive structures in the world. Construction began in the 7th century BC and continued for centuries. The wall stretches over 13,000 miles and was built to protect against invasions.",
+        (
+            "The Great Wall of China is one of the most impressive structures in "
+            "the world. Construction began in the 7th century BC and continued for "
+            "centuries. The wall stretches over 13,000 miles and was built to "
+            "protect against invasions."
+        ),
         "How long is the Great Wall of China?",
         "BERT SQuAD",
     ],
@@ -232,14 +256,12 @@ def create_ui():
     """Create and configure the Gradio interface"""
 
     with gr.Blocks(title="Question Answering System", theme=gr.themes.Soft()) as demo:
-        gr.Markdown(
-            """
+        gr.Markdown("""
             # ❓ Question Answering System
 
             Answer questions based on a provided context using state-of-the-art extractive QA models.
             Simply provide context and ask a question, and the model will find the answer!
-            """
-        )
+            """)
 
         with gr.Tab("Single Question"):
             with gr.Row():
@@ -278,8 +300,7 @@ def create_ui():
             )
 
         with gr.Tab("Batch Processing"):
-            gr.Markdown(
-                """
+            gr.Markdown("""
                 ### Process multiple context-question pairs
                 Format your input as:
                 ```
@@ -290,8 +311,7 @@ def create_ui():
                 Question 2?
                 ```
                 Separate each pair with `---`
-                """
-            )
+                """)
 
             with gr.Row():
                 with gr.Column():
@@ -312,8 +332,7 @@ def create_ui():
                     batch_output = gr.Textbox(label="Batch Results", lines=15, max_lines=25)
 
         with gr.Tab("About"):
-            gr.Markdown(
-                """
+            gr.Markdown("""
                 ## About This Tool
 
                 This Question Answering system uses extractive QA models to find answers within provided context.
@@ -343,8 +362,7 @@ def create_ui():
                 - Can only extract answers from provided context
                 - Works best with factual, well-structured text
                 - May struggle with complex or ambiguous questions
-                """
-            )
+                """)
 
         # Connect the components
         answer_btn.click(

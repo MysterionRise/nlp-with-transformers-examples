@@ -381,14 +381,12 @@ def create_ui():
     """Create and configure the Gradio interface"""
 
     with gr.Blocks(title="Sentence Similarity Explorer", theme=gr.themes.Soft()) as demo:
-        gr.Markdown(
-            """
+        gr.Markdown("""
             # 🔍 Sentence Similarity Explorer
 
             Explore semantic similarity between sentences using transformer-based embeddings.
             Discover how AI understands meaning beyond just matching words!
-            """
-        )
+            """)
 
         with gr.Tab("Pairwise Comparison"):
             gr.Markdown("### Compare two sentences to see how semantically similar they are")
@@ -477,8 +475,7 @@ def create_ui():
                     matrix_plot = gr.Plot(label="Similarity Heatmap")
 
         with gr.Tab("About"):
-            gr.Markdown(
-                """
+            gr.Markdown("""
                 ## About This Tool
 
                 This tool uses the **sentence-transformers/all-MiniLM-L6-v2** model to generate
@@ -516,8 +513,7 @@ def create_ui():
                 - Longer, more detailed sentences often produce better embeddings
                 - The model understands context and semantics, not just keywords
                 - Try comparing sentences with similar meanings but different words
-                """
-            )
+                """)
 
         # Connect components
         compare_btn.click(

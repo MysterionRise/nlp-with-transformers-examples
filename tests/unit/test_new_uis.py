@@ -131,9 +131,7 @@ class TestGenerationPlayground:
         from ui.generation_playground import generate_text
 
         mock_model = MagicMock()
-        mock_model.return_value = [
-            {"generated_text": "The future of AI is bright and promising"}
-        ]
+        mock_model.return_value = [{"generated_text": "The future of AI is bright and promising"}]
         mock_load.return_value = mock_model
 
         result = generate_text("The future of AI", "GPT-2", max_length=50, temperature=0.7)
@@ -309,8 +307,9 @@ class TestVisionLanguageExplorer:
     @patch("ui.vision_language_explorer.load_image_captioning_model")
     def test_generate_caption_success(self, mock_load):
         """Test successful image caption generation"""
-        from ui.vision_language_explorer import generate_caption
         from PIL import Image
+
+        from ui.vision_language_explorer import generate_caption
 
         # Create a dummy image
         img = Image.new("RGB", (100, 100), color="red")
@@ -318,9 +317,7 @@ class TestVisionLanguageExplorer:
         mock_model = MagicMock()
         mock_processor = MagicMock()
         mock_processor.return_value = {"pixel_values": MagicMock()}
-        mock_processor.batch_decode = MagicMock(
-            return_value=["a red square on white background"]
-        )
+        mock_processor.batch_decode = MagicMock(return_value=["a red square on white background"])
         mock_model.generate = MagicMock(return_value=MagicMock())
 
         mock_load.return_value = (mock_model, mock_processor)
@@ -341,8 +338,9 @@ class TestVisionLanguageExplorer:
 
     def test_calculate_clip_similarity_no_texts(self):
         """Test similarity calculation with no texts"""
-        from ui.vision_language_explorer import calculate_clip_similarity
         from PIL import Image
+
+        from ui.vision_language_explorer import calculate_clip_similarity
 
         img = Image.new("RGB", (100, 100))
         result, html = calculate_clip_similarity(img, [])

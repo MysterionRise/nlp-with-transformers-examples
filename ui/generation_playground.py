@@ -84,6 +84,7 @@ def generate_text(
         # Set seed for reproducibility if provided
         if seed is not None:
             import torch
+
             torch.manual_seed(seed)
 
         # Generate text
@@ -155,6 +156,7 @@ def compare_models(
 
                 if seed is not None:
                     import torch
+
                     torch.manual_seed(seed)
 
                 output = generator(
@@ -272,14 +274,12 @@ def create_ui():
     """Create and configure the Gradio interface"""
 
     with gr.Blocks(title="Text Generation Playground", theme=gr.themes.Soft()) as demo:
-        gr.Markdown(
-            """
+        gr.Markdown("""
             # 📝 Text Generation Playground
 
             Generate creative text completions using state-of-the-art language models.
             Experiment with different prompts, models, and parameters!
-            """
-        )
+            """)
 
         with gr.Tab("Single Generation"):
             with gr.Row():
@@ -341,12 +341,10 @@ def create_ui():
             )
 
         with gr.Tab("Model Comparison"):
-            gr.Markdown(
-                """
+            gr.Markdown("""
                 ### Compare all models on the same prompt
                 Generate text with different models to see how they differ in style and quality.
-                """
-            )
+                """)
 
             with gr.Row():
                 with gr.Column(scale=2):
@@ -388,12 +386,10 @@ def create_ui():
             compare_output = gr.JSON(label="Model Comparison")
 
         with gr.Tab("Batch Generation"):
-            gr.Markdown(
-                """
+            gr.Markdown("""
                 ### Generate text for multiple prompts
                 Enter multiple prompts (one per line) and generate continuations for all of them.
-                """
-            )
+                """)
 
             with gr.Row():
                 with gr.Column():
@@ -428,8 +424,7 @@ def create_ui():
             batch_output = gr.Textbox(label="Batch Results", lines=15, max_lines=20)
 
         with gr.Tab("About"):
-            gr.Markdown(
-                """
+            gr.Markdown("""
                 ## About This Tool
 
                 This text generation playground uses GPT-2 based models to generate creative text completions.
@@ -471,8 +466,7 @@ def create_ui():
                 - Models can produce nonsensical text
                 - May be biased based on training data
                 - Cannot follow complex instructions
-                """
-            )
+                """)
 
         # Connect the components
         generate_btn.click(
