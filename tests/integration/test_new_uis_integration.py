@@ -65,7 +65,10 @@ class TestNewUIsIntegration:
     @patch("ui.qa_system.pipeline")
     def test_qa_system_workflow(self, mock_pipeline):
         """Test complete QA system workflow"""
-        from ui.qa_system import answer_question, create_ui, load_model
+        from ui.qa_system import answer_question, create_ui, load_model, model_cache
+
+        # Clear cache to ensure mock is used
+        model_cache.clear()
 
         # Mock the model
         mock_model = MagicMock()
@@ -94,10 +97,12 @@ class TestNewUIsIntegration:
         assert ui is not None
 
     @patch("ui.generation_playground.pipeline")
-    @patch("ui.generation_playground.torch")
-    def test_generation_playground_workflow(self, mock_torch, mock_pipeline):
+    def test_generation_playground_workflow(self, mock_pipeline):
         """Test complete text generation workflow"""
-        from ui.generation_playground import batch_generate, create_ui, generate_text, load_model
+        from ui.generation_playground import batch_generate, create_ui, generate_text, load_model, model_cache
+
+        # Clear cache to ensure mock is used
+        model_cache.clear()
 
         # Mock the model
         mock_model = MagicMock()
@@ -123,7 +128,10 @@ class TestNewUIsIntegration:
     @patch("ui.zero_shot_classifier.pipeline")
     def test_zero_shot_classifier_workflow(self, mock_pipeline):
         """Test complete zero-shot classification workflow"""
-        from ui.zero_shot_classifier import batch_classify, classify_text, create_ui, load_model
+        from ui.zero_shot_classifier import batch_classify, classify_text, create_ui, load_model, model_cache
+
+        # Clear cache to ensure mock is used
+        model_cache.clear()
 
         # Mock the model
         mock_model = MagicMock()
@@ -185,7 +193,10 @@ class TestNewUIsIntegration:
         # Mock the model
         mock_model = MagicMock()
         mock_processor = MagicMock()
-        mock_processor.return_value = {"pixel_values": MagicMock()}
+        # Return an object with .pixel_values attribute (not a plain dict)
+        mock_processor_output = MagicMock()
+        mock_processor_output.pixel_values = MagicMock()
+        mock_processor.return_value = mock_processor_output
         mock_processor.batch_decode = MagicMock(return_value=["a blue square"])
         mock_model.generate = MagicMock(return_value=MagicMock())
         mock_load_git.return_value = (mock_model, mock_processor)

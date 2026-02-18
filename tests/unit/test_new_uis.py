@@ -26,9 +26,12 @@ class TestQASystem:
     @patch("ui.qa_system.pipeline")
     def test_load_model_success(self, mock_pipeline):
         """Test successful model loading for QA"""
-        from ui.qa_system import load_model
+        from ui.qa_system import load_model, model_cache
 
         mock_pipeline.return_value = MagicMock()
+
+        # Clear cache to force fresh load
+        model_cache.clear()
 
         model = load_model("DistilBERT SQuAD")
         assert model is not None
@@ -168,9 +171,12 @@ class TestZeroShotClassifier:
     @patch("ui.zero_shot_classifier.pipeline")
     def test_load_model_success(self, mock_pipeline):
         """Test successful zero-shot model loading"""
-        from ui.zero_shot_classifier import load_model
+        from ui.zero_shot_classifier import load_model, model_cache
 
         mock_pipeline.return_value = MagicMock()
+
+        # Clear cache to force fresh load
+        model_cache.clear()
 
         model = load_model("BART Large MNLI")
         assert model is not None
