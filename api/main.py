@@ -140,10 +140,17 @@ All errors follow a consistent format:
         openapi_url="/openapi.json",
     )
 
-    # Add CORS middleware
+    # Add CORS middleware - origins loaded from settings (default: localhost only)
+    try:
+        from config.settings import get_settings
+
+        cors_origins = get_settings().api.cors_origins
+    except Exception:
+        cors_origins = ["http://localhost:3000", "http://localhost:8000"]
+
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=["*"],  # Configure appropriately for production
+        allow_origins=cors_origins,
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],

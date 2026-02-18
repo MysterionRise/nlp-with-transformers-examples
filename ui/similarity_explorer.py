@@ -14,7 +14,6 @@ from typing import Dict, List, Tuple
 
 import gradio as gr
 import numpy as np
-import plotly.express as px
 import plotly.graph_objects as go
 import torch
 import torch.nn.functional as F
@@ -28,6 +27,7 @@ logger = logging.getLogger(__name__)
 
 # Model configuration
 MODEL_NAME = "sentence-transformers/all-MiniLM-L6-v2"
+MODEL_REVISION = "c9745ed1d9f207416be6d2e6f8de32d1f16199bf"
 tokenizer = None
 model = None
 
@@ -37,8 +37,8 @@ def load_model():
     global tokenizer, model
     if tokenizer is None or model is None:
         logger.info(f"Loading model: {MODEL_NAME}")
-        tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
-        model = AutoModel.from_pretrained(MODEL_NAME)
+        tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME, revision=MODEL_REVISION)
+        model = AutoModel.from_pretrained(MODEL_NAME, revision=MODEL_REVISION)
         logger.info("Model loaded successfully")
 
 
@@ -138,12 +138,6 @@ def compare_two_sentences(text1: str, text2: str) -> Tuple[float, str, Dict]:
         )
 
         fig.update_layout(height=300, margin=dict(l=20, r=20, t=40, b=20))
-
-        results = {
-            "Similarity Score": f"{similarity:.4f}",
-            "Percentage": f"{similarity * 100:.2f}%",
-            "Interpretation": interpretation,
-        }
 
         return similarity, interpretation, fig
 

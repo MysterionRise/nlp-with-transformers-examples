@@ -10,10 +10,9 @@ Features:
 """
 
 import logging
-from typing import Dict, List
+from typing import Dict
 
 import gradio as gr
-import plotly.graph_objects as go
 from transformers import pipeline
 
 # Set up logging
@@ -325,7 +324,7 @@ def create_ui():
                         step=5,
                         label="Top-k",
                     )
-                    seed_input = gr.Number(
+                    gr.Number(
                         label="Seed (for reproducibility)",
                         value=42,
                         precision=0,

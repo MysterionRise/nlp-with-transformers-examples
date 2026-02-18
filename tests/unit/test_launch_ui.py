@@ -4,11 +4,9 @@ import sys
 from pathlib import Path
 from unittest.mock import Mock, patch
 
-import pytest
-
 # Import the module under test
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
-from launch_ui import UIS, launch_ui, list_uis, print_banner
+from launch_ui import UIS, launch_ui, list_uis, print_banner  # noqa: E402
 
 
 class TestUIConfiguration:
@@ -82,7 +80,7 @@ class TestLaunchUI:
     def test_launch_ui_valid_key(self, mock_run):
         """Test launching with valid UI key"""
         mock_run.return_value = Mock()
-        result = launch_ui("sentiment")
+        launch_ui("sentiment")
         assert mock_run.called
 
     @patch("subprocess.run")

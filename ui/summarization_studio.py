@@ -14,7 +14,7 @@ import time
 from typing import Dict, List, Tuple
 
 import gradio as gr
-from transformers import AutoModelForSeq2SeqLM, AutoTokenizer, pipeline
+from transformers import pipeline
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)

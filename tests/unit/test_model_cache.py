@@ -2,13 +2,13 @@
 Unit tests for model caching system
 """
 
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import Mock, patch
 
 import pytest
 
 from config import ModelConfig
 from utils.error_handler import ModelLoadError, ModelNotFoundError
-from utils.model_cache import ModelCache, clear_model_cache, get_cache_info, get_model_cache, load_model
+from utils.model_cache import ModelCache, clear_model_cache, get_cache_info, load_model
 
 
 @pytest.fixture

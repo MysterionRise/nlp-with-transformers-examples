@@ -27,41 +27,28 @@ class APISettings(BaseModel):
     API-specific settings for authentication and rate limiting
     """
 
-    # JWT settings
+    # JWT settings - MUST be set via NLP_API__JWT_SECRET environment variable
     jwt_secret: str = Field(
-        default="change-this-secret-in-production",
-        description="Secret key for JWT token signing. MUST be changed in production.",
+        default="",
+        description="Secret key for JWT token signing. Set via NLP_API__JWT_SECRET env var.",
     )
     jwt_algorithm: str = Field(default="HS256", description="Algorithm for JWT encoding")
     jwt_expiration_hours: int = Field(default=24, description="JWT token expiration time in hours")
 
-    # API Keys - dict of api_key -> config
+    # API Keys - set via NLP_API__API_KEYS env var or .env file (no defaults shipped)
     api_keys: Dict[str, Dict[str, Any]] = Field(
-        default_factory=lambda: {
-            "dev-api-key": {
-                "name": "Development",
-                "role": "admin",
-                "rate_limit": 1000,
-                "enabled": True,
-            },
-            "demo-api-key": {
-                "name": "Demo User",
-                "role": "user",
-                "rate_limit": 100,
-                "enabled": True,
-            },
-        },
-        description="API keys with their configurations",
+        default_factory=dict,
+        description="API keys with their configurations. Must be configured via environment.",
     )
 
     # Rate limiting defaults
     default_rate_limit: int = Field(default=100, description="Default requests per minute")
     rate_limit_window_seconds: int = Field(default=60, description="Rate limit window in seconds")
 
-    # CORS settings
+    # CORS settings - defaults to localhost only; override via NLP_API__CORS_ORIGINS
     cors_origins: List[str] = Field(
-        default_factory=lambda: ["*"],
-        description="Allowed CORS origins",
+        default_factory=lambda: ["http://localhost:3000", "http://localhost:8000"],
+        description="Allowed CORS origins. Set via NLP_API__CORS_ORIGINS env var.",
     )
 
 

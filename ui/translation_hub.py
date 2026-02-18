@@ -10,7 +10,7 @@ Features:
 """
 
 import logging
-from typing import Dict, List, Tuple
+from typing import Dict
 
 import gradio as gr
 from transformers import pipeline
@@ -115,7 +115,7 @@ def translate_mbart(text: str, source_lang: str, target_lang: str) -> Dict:
         tgt_code = MBARTLANGUAGES.get(target_lang)
 
         if not src_code or not tgt_code:
-            return {"error": f"Language pair not supported"}
+            return {"error": "Language pair not supported"}
 
         # Set source language
         translator.tokenizer.src_lang = src_code

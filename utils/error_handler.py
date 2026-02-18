@@ -317,7 +317,8 @@ def get_error_suggestion(error: Exception) -> Optional[str]:
         Suggestion string or None
     """
     suggestions = {
-        MemoryError: "Try using a smaller model or reducing the batch size. Close other applications to free up memory.",
+        MemoryError: "Try using a smaller model or reducing the batch size. "
+        "Close other applications to free up memory.",
         FileNotFoundError: "Check that all required files are present and paths are correct.",
         ModelLoadError: (
             "Ensure you have internet connection for downloading models. " "Check if the model name is correct."

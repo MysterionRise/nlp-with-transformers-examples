@@ -236,7 +236,7 @@ class TestNewUIsLaunchConfiguration:
 
     def test_all_uis_launchable(self):
         """Test that all UIs can be launched without errors"""
-        from launch_ui import UIS, launch_ui
+        from launch_ui import UIS
 
         for ui_key in ["qa", "generation", "zero_shot", "translation", "vision"]:
             # Verify UI is in registry

@@ -55,7 +55,7 @@ class TestQASystem:
         """Test handling of empty context"""
         from ui.qa_system import answer_question
 
-        result, _, _ = answer_question("", "What is AI?", "DistilBERT SQuAD")
+        result, _ = answer_question("", "What is AI?", "DistilBERT SQuAD")
         assert "error" in result
 
     def test_answer_question_empty_question(self):
@@ -63,7 +63,7 @@ class TestQASystem:
         from ui.qa_system import answer_question
 
         context = "Artificial intelligence is a field of computer science."
-        result, _, _ = answer_question(context, "", "DistilBERT SQuAD")
+        result, _ = answer_question(context, "", "DistilBERT SQuAD")
         assert "error" in result
 
     @patch("ui.qa_system.load_model")
@@ -96,7 +96,9 @@ class TestQASystem:
 
         context = "The Eiffel Tower is in Paris"
         answer = "Paris"
-        html = highlight_answer(context, answer, 20, 25)
+        start = context.index(answer)
+        end = start + len(answer)
+        html = highlight_answer(context, answer, start, end)
 
         assert "mark" in html
         assert "Paris" in html
@@ -109,9 +111,12 @@ class TestGenerationPlayground:
     @patch("ui.generation_playground.pipeline")
     def test_load_model_success(self, mock_pipeline):
         """Test successful generation model loading"""
-        from ui.generation_playground import load_model
+        from ui.generation_playground import load_model, model_cache
 
         mock_pipeline.return_value = MagicMock()
+
+        # Clear cache to force fresh load
+        model_cache.clear()
 
         model = load_model("GPT-2")
         assert model is not None
@@ -125,8 +130,7 @@ class TestGenerationPlayground:
         assert "error" in result
 
     @patch("ui.generation_playground.load_model")
-    @patch("ui.generation_playground.torch")
-    def test_generate_text_success(self, mock_torch, mock_load):
+    def test_generate_text_success(self, mock_load):
         """Test successful text generation"""
         from ui.generation_playground import generate_text
 
@@ -316,7 +320,10 @@ class TestVisionLanguageExplorer:
 
         mock_model = MagicMock()
         mock_processor = MagicMock()
-        mock_processor.return_value = {"pixel_values": MagicMock()}
+        # Return an object with .pixel_values attribute (not a plain dict)
+        mock_processor_output = MagicMock()
+        mock_processor_output.pixel_values = MagicMock()
+        mock_processor.return_value = mock_processor_output
         mock_processor.batch_decode = MagicMock(return_value=["a red square on white background"])
         mock_model.generate = MagicMock(return_value=MagicMock())
 

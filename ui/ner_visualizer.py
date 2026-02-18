@@ -282,7 +282,7 @@ def extract_entities(
 def get_entity_types():
     """Get list of available entity types from Spacy"""
     try:
-        nlp = load_spacy_model()
+        load_spacy_model()
         # Standard Spacy entity types
         entity_types = [
             "PERSON",  # People, including fictional
@@ -305,7 +305,7 @@ def get_entity_types():
             "CARDINAL",  # Numerals that do not fall under another type
         ]
         return entity_types
-    except:
+    except Exception:
         return []
 
 

@@ -49,26 +49,13 @@ def get_api_settings():
 
 
 def _get_default_api_settings():
-    """Default API settings if not configured"""
+    """Default API settings if not configured — no keys shipped by default"""
 
     class DefaultAPISettings:
-        jwt_secret = "dev-secret-key-change-in-production"
+        jwt_secret = ""
         jwt_algorithm = "HS256"
         jwt_expiration_hours = 24
-        api_keys = {
-            "dev-api-key": {
-                "name": "Development",
-                "role": "admin",
-                "rate_limit": 1000,
-                "enabled": True,
-            },
-            "demo-api-key": {
-                "name": "Demo User",
-                "role": "user",
-                "rate_limit": 100,
-                "enabled": True,
-            },
-        }
+        api_keys = {}
 
     return DefaultAPISettings()
 

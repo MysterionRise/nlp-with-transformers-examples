@@ -4,7 +4,6 @@ Integration tests for Phase 2 components
 Tests how config, error handling, logging, and model caching work together.
 """
 
-import tempfile
 from pathlib import Path
 from unittest.mock import Mock, patch
 
@@ -89,7 +88,7 @@ class TestLoggingIntegration:
     def test_performance_logger_with_settings(self):
         """Test PerformanceLogger uses settings"""
         logger = get_logger("test_perf")
-        settings = get_settings()
+        get_settings()  # ensure settings are loaded
 
         # Logger should respect settings log level
         assert logger.level >= 0

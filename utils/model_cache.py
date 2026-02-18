@@ -8,7 +8,7 @@ Supports automatic device detection (CPU, CUDA, MPS) and lazy loading.
 import gc
 import threading
 from collections import OrderedDict
-from typing import Any, Dict, Optional, Union
+from typing import Any, Dict, Optional
 
 import torch
 from transformers import Pipeline, pipeline

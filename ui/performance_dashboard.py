@@ -9,13 +9,11 @@ Features:
 - Manage model cache
 """
 
-import json
 from typing import Dict, List, Tuple
 
 import gradio as gr
 import pandas as pd
 import plotly.graph_objects as go
-from plotly.subplots import make_subplots
 
 from config.settings import get_model_registry
 from utils import get_cache_info, get_logger

@@ -10,7 +10,30 @@ from fastapi.testclient import TestClient
 from api.main import app
 
 # Test API key for authentication
-TEST_API_KEY = "dev-api-key"
+TEST_API_KEY = "test-api-key"
+TEST_API_KEYS = {
+    TEST_API_KEY: {
+        "name": "Test",
+        "role": "admin",
+        "rate_limit": 1000,
+        "enabled": True,
+    },
+}
+
+
+@pytest.fixture(autouse=True)
+def _inject_test_api_keys():
+    """Inject test API keys into settings for all API tests"""
+    from config.settings import get_settings
+
+    settings = get_settings()
+    original_keys = settings.api.api_keys
+    original_secret = settings.api.jwt_secret
+    settings.api.api_keys = TEST_API_KEYS
+    settings.api.jwt_secret = "test-jwt-secret"
+    yield
+    settings.api.api_keys = original_keys
+    settings.api.jwt_secret = original_secret
 
 
 @pytest.fixture

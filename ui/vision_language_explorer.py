@@ -9,12 +9,10 @@ Features:
 - Cross-modal retrieval
 """
 
-import io
 import logging
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Tuple
 
 import gradio as gr
-import numpy as np
 from PIL import Image
 
 # Set up logging
@@ -25,6 +23,12 @@ logger = logging.getLogger(__name__)
 _models_cache = {}
 
 
+CLIP_MODEL_ID = "openai/clip-vit-base-patch32"
+CLIP_REVISION = "3d74acf9a28c67741b2f4f2ea7635f0aaf6f0268"
+GIT_MODEL_ID = "microsoft/git-base"
+GIT_REVISION = "1f7fe8444292beb4a259e3a5b6eba440cd5999d4"
+
+
 def load_clip_model():
     """Load CLIP model for image-text matching"""
     if "clip" not in _models_cache:
@@ -32,8 +36,8 @@ def load_clip_model():
         try:
             from transformers import CLIPModel, CLIPProcessor
 
-            model = CLIPModel.from_pretrained("openai/clip-vit-base-patch32")
-            processor = CLIPProcessor.from_pretrained("openai/clip-vit-base-patch32")
+            model = CLIPModel.from_pretrained(CLIP_MODEL_ID, revision=CLIP_REVISION)
+            processor = CLIPProcessor.from_pretrained(CLIP_MODEL_ID, revision=CLIP_REVISION)
             _models_cache["clip"] = (model, processor)
             logger.info("CLIP model loaded successfully")
         except Exception as e:
@@ -49,8 +53,8 @@ def load_image_captioning_model():
         try:
             from transformers import AutoModelForCausalLM, AutoProcessor
 
-            model = AutoModelForCausalLM.from_pretrained("microsoft/git-base")
-            processor = AutoProcessor.from_pretrained("microsoft/git-base")
+            model = AutoModelForCausalLM.from_pretrained(GIT_MODEL_ID, revision=GIT_REVISION)
+            processor = AutoProcessor.from_pretrained(GIT_MODEL_ID, revision=GIT_REVISION)
             _models_cache["git"] = (model, processor)
             logger.info("GIT model loaded successfully")
         except Exception as e:
@@ -167,7 +171,7 @@ def calculate_clip_similarity(image: Image.Image, texts: List[str]) -> Tuple[Dic
             score = prob.item()
             bar_width = int(score * 300)
             html += f"<tr><td style='border: 1px solid #ddd; padding: 8px;'>{text}</td>"
-            html += f"<td style='border: 1px solid #ddd; padding: 8px;'>"
+            html += "<td style='border: 1px solid #ddd; padding: 8px;'>"
             html += f"<div style='background-color: #4CAF50; width: {bar_width}px; height: 20px; border-radius: 3px;'>"
             html += f"<span style='color: white; font-weight: bold;'>{score:.4f}</span></div></td></tr>"
 

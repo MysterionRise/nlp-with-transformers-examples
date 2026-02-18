@@ -181,7 +181,7 @@ def batch_answer(batch_text: str, model_name: str, delimiter: str = "\n---\n") -
 
         results = []
         for i, pair in enumerate(pairs, 1):
-            lines = [l.strip() for l in pair.split("\n") if l.strip()]
+            lines = [line.strip() for line in pair.split("\n") if line.strip()]
 
             if len(lines) < 2:
                 results.append(f"{i}. Invalid format (need context + question)")
