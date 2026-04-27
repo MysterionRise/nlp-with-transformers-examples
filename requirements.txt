@@ -31,7 +31,7 @@ uvicorn[standard]>=0.27.0
 python-jose[cryptography]>=3.3.0
 slowapi>=0.1.9
 prometheus-client>=0.19.0
-httpx>=0.26.0
+httpx>=0.28.1
 
 # Sentence Transformers (for similarity endpoint)
 sentence-transformers>=2.2.0
