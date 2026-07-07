@@ -24,8 +24,8 @@ TEST_API_KEYS = {
 @pytest.fixture(autouse=True)
 def _inject_test_api_keys():
     """Inject test API keys into settings for all API tests"""
-    from config.settings import get_settings
     from api.middleware.rate_limit import clear_rate_limit_storage
+    from config.settings import get_settings
 
     settings = get_settings()
     original_keys = settings.api.api_keys

@@ -4,8 +4,8 @@ Logging utilities for the Customer Intelligence NLP Platform
 Provides structured logging with rotation, formatting, and performance tracking.
 """
 
-import logging
 import json
+import logging
 import sys
 import time
 from logging.handlers import RotatingFileHandler
