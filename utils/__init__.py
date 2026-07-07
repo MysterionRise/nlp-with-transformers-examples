@@ -1,5 +1,5 @@
 """
-Utilities package for NLP Transformers Examples
+Utilities package for the Customer Intelligence NLP Platform
 
 This package provides shared utilities for error handling, logging,
 model caching, and other common functionality.
@@ -21,14 +21,27 @@ from .error_handler import (
     validate_input,
 )
 from .logger import PerformanceLogger, get_logger, init_logging, log_function_call, setup_logger
-from .model_cache import (
-    ModelCache,
-    clear_model_cache,
-    get_cache_info,
-    get_model_cache,
-    load_model,
-    load_model_by_id,
-)
+
+_MODEL_CACHE_EXPORTS = {
+    "ModelCache",
+    "get_model_cache",
+    "load_model",
+    "load_model_by_id",
+    "load_sentence_transformer",
+    "load_spacy_model",
+    "clear_model_cache",
+    "get_cache_info",
+}
+
+
+def __getattr__(name):
+    """Lazily import heavy model-cache utilities only when they are used."""
+    if name in _MODEL_CACHE_EXPORTS:
+        from . import model_cache
+
+        return getattr(model_cache, name)
+    raise AttributeError(f"module 'utils' has no attribute '{name}'")
+
 
 __all__ = [
     # Error handling
@@ -56,6 +69,8 @@ __all__ = [
     "get_model_cache",
     "load_model",
     "load_model_by_id",
+    "load_sentence_transformer",
+    "load_spacy_model",
     "clear_model_cache",
     "get_cache_info",
 ]

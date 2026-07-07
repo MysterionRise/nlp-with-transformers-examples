@@ -106,12 +106,14 @@ async def readiness_check() -> ReadinessResponse:
     try:
         from config.settings import get_model_registry, get_settings
 
-        get_settings()  # Verify settings can be loaded
+        settings = get_settings()  # Verify settings can be loaded
         checks["config_loaded"] = True
         checks["model_registry"] = get_model_registry() is not None
+        checks["auth_configured"] = bool(settings.api.jwt_secret and settings.api.api_keys)
     except Exception:
         checks["config_loaded"] = False
         checks["model_registry"] = False
+        checks["auth_configured"] = False
 
     # Check model cache
     try:
@@ -123,6 +125,19 @@ async def readiness_check() -> ReadinessResponse:
     except Exception:
         checks["model_cache"] = False
         checks["cache_initialized"] = False
+
+    # Check Redis only when configured
+    try:
+        from api.middleware.rate_limit import get_redis_health
+        from config.settings import get_settings
+
+        redis_health = get_redis_health()
+        if get_settings().redis_url:
+            checks["redis_available"] = redis_health["available"]
+        else:
+            checks["redis_optional"] = True
+    except Exception:
+        checks["redis_available"] = False
 
     # Determine overall status
     all_passed = all(checks.values())
@@ -183,14 +198,15 @@ async def system_status(
     except Exception:
         cache_stats = {"error": "Unable to retrieve cache stats"}
 
-    # Get metrics collector for uptime
+    # Get metrics collector for uptime and request summaries
     metrics = get_metrics_collector()
+    summary = metrics.get_summary()
 
     return MetricsResponse(
-        requests_total=0,  # Would be populated from actual metrics
-        requests_by_endpoint={},
+        requests_total=summary["requests_total"],
+        requests_by_endpoint=summary["requests_by_endpoint"],
         model_cache_stats={**cache_stats, "uptime_seconds": metrics.uptime_seconds},
-        average_latency_ms={},
+        average_latency_ms=summary["average_latency_ms"],
     )
 
 

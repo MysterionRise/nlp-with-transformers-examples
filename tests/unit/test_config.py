@@ -25,10 +25,44 @@ class TestSettings:
     def test_default_values(self):
         """Test default setting values"""
         settings = get_settings()
-        assert settings.app_name == "NLP Transformers Examples"
+        assert settings.app_name == "Customer Intelligence NLP Platform"
         assert settings.debug is False
         assert settings.log_level == "INFO"
         assert settings.max_cached_models == 3
+
+    def test_nested_api_environment_values(self, monkeypatch):
+        """Test nested API settings load from NLP_API__ environment variables"""
+        import json
+
+        from config.settings import get_settings as cached_get_settings
+
+        cached_get_settings.cache_clear()
+        monkeypatch.setenv("NLP_API__JWT_SECRET", "env-secret")
+        monkeypatch.setenv(
+            "NLP_API__API_KEYS",
+            json.dumps(
+                {
+                    "env-api-key": {
+                        "name": "Env User",
+                        "role": "admin",
+                        "rate_limit": 250,
+                        "enabled": True,
+                    }
+                }
+            ),
+        )
+        monkeypatch.setenv("NLP_REDIS_URL", "redis://localhost:6379/0")
+        monkeypatch.setenv("NLP_OTEL_ENABLED", "true")
+
+        settings = cached_get_settings()
+
+        assert settings.api.jwt_secret == "env-secret"
+        assert settings.api.api_keys["env-api-key"]["name"] == "Env User"
+        assert settings.api.api_keys["env-api-key"]["rate_limit"] == 250
+        assert settings.redis_url == "redis://localhost:6379/0"
+        assert settings.otel_enabled is True
+
+        cached_get_settings.cache_clear()
 
 
 class TestModelRegistry:

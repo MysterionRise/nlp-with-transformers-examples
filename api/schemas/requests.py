@@ -5,7 +5,7 @@ All request models include validation, examples, and comprehensive documentation
 for beautiful OpenAPI/Swagger UI documentation.
 """
 
-from typing import List, Optional
+from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, Field
 
@@ -180,8 +180,8 @@ class SimilarityRequest(BaseModel):
     )
     model: Optional[str] = Field(
         default=None,
-        description="Embedding model key from registry (e.g., 'minilm', 'mpnet')",
-        json_schema_extra={"example": "minilm"},
+        description="Embedding model key from registry (e.g., 'all_minilm_l6', 'all_mpnet_base')",
+        json_schema_extra={"example": "all_minilm_l6"},
     )
 
     model_config = {
@@ -190,7 +190,7 @@ class SimilarityRequest(BaseModel):
                 {
                     "text1": "The weather is beautiful today.",
                     "text2": "It's a lovely sunny day outside.",
-                    "model": "minilm",
+                    "model": "all_minilm_l6",
                 }
             ]
         }
@@ -244,5 +244,78 @@ class QARequest(BaseModel):
                     "top_k": 1,
                 }
             ]
+        }
+    }
+
+
+class CustomerTextItem(BaseModel):
+    """Single text item for customer intelligence analysis"""
+
+    id: Optional[str] = Field(
+        default=None,
+        max_length=128,
+        description="Optional caller-provided item identifier",
+        json_schema_extra={"example": "review-001"},
+    )
+    text: str = Field(
+        ...,
+        min_length=1,
+        max_length=5000,
+        description="Customer feedback, review, support note, or article text",
+        json_schema_extra={"example": "The onboarding was smooth, but support took two days to reply."},
+    )
+    metadata: Optional[Dict[str, Any]] = Field(
+        default=None,
+        description="Optional item metadata returned unchanged in the response",
+        json_schema_extra={"example": {"source": "app_store", "region": "US"}},
+    )
+
+
+class CustomerIntelligenceRequest(BaseModel):
+    """Request model for portfolio-grade customer intelligence analysis"""
+
+    items: List[CustomerTextItem] = Field(
+        ...,
+        min_length=1,
+        max_length=100,
+        description="Text items to analyze",
+    )
+    sentiment_model: Optional[str] = Field(
+        default=None,
+        description="Sentiment model registry key. Defaults to twitter_roberta_multilingual.",
+        json_schema_extra={"example": "twitter_roberta_multilingual"},
+    )
+    ner_model: Optional[str] = Field(
+        default=None,
+        description="NER model registry key. Defaults to spacy_sm.",
+        json_schema_extra={"example": "spacy_sm"},
+    )
+    summary_model: Optional[str] = Field(
+        default=None,
+        description="Summarization model registry key. Defaults to bart_large_cnn.",
+        json_schema_extra={"example": "bart_large_cnn"},
+    )
+    include_summary: bool = Field(
+        default=True,
+        description="Generate a portfolio-level summary when enough text is available",
+    )
+
+    model_config = {
+        "json_schema_extra": {
+            "example": {
+                "items": [
+                    {
+                        "id": "review-001",
+                        "text": "The product is excellent, but delivery took too long.",
+                        "metadata": {"source": "retail_reviews"},
+                    },
+                    {
+                        "id": "review-002",
+                        "text": "Support resolved my issue quickly and the mobile app is easy to use.",
+                        "metadata": {"source": "support_ticket"},
+                    },
+                ],
+                "include_summary": True,
+            }
         }
     }

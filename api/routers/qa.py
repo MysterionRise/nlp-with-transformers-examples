@@ -4,21 +4,17 @@ Question Answering API Router
 Provides endpoints for extractive question answering.
 """
 
-import asyncio
-import time
-from typing import Annotated, List
+from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 
 from api.middleware.auth import User, get_current_user
 from api.schemas.requests import QARequest
 from api.schemas.responses import QAAnswer, QAResponse
-from utils.metrics import record_error, track_inference_time
+from utils.inference import DEFAULT_QA_MODEL, get_inference_service
+from utils.metrics import record_error
 
 router = APIRouter(prefix="/api/v1", tags=["Question Answering"])
-
-# Default model for QA
-DEFAULT_QA_MODEL = "distilbert_squad"
 
 
 @router.post(
@@ -66,16 +62,28 @@ async def answer_question(
 
     **Authentication required:** API key or JWT token
     """
-    from config.settings import get_model_registry
-    from utils.model_cache import load_model
-
     model_key = body.model or DEFAULT_QA_MODEL
-    registry = get_model_registry()
 
-    # Get model config
     try:
-        model_config = registry.get_model("question_answering", model_key)
+        result = await get_inference_service().answer_question(
+            question=body.question,
+            context=body.context,
+            model_key=model_key,
+            top_k=body.top_k or 1,
+        )
+
+        return QAResponse(
+            question=body.question,
+            context=body.context,
+            answers=[QAAnswer(**answer) for answer in result["answers"]],
+            model=result["model"],
+            processing_time_ms=result["processing_time_ms"],
+        )
+
     except KeyError:
+        from config.settings import get_model_registry
+
+        registry = get_model_registry()
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail={
@@ -84,45 +92,6 @@ async def answer_question(
                 "available_models": registry.list_models("question_answering"),
             },
         )
-
-    try:
-        start_time = time.time()
-
-        def _inference():
-            pipeline = load_model("question_answering", model_key)
-            # Get top_k answers
-            return pipeline(question=body.question, context=body.context, top_k=body.top_k)
-
-        with track_inference_time(model_config.model_id, "qa"):
-            result = await asyncio.to_thread(_inference)
-
-        processing_time = (time.time() - start_time) * 1000
-
-        # Parse results
-        answers: List[QAAnswer] = []
-
-        # Handle both single and multiple results
-        if isinstance(result, dict):
-            result = [result]
-
-        for r in result:
-            answers.append(
-                QAAnswer(
-                    answer=r.get("answer", ""),
-                    score=r.get("score", 0.0),
-                    start=r.get("start", 0),
-                    end=r.get("end", 0),
-                )
-            )
-
-        return QAResponse(
-            question=body.question,
-            context=body.context,
-            answers=answers,
-            model=model_config.model_id,
-            processing_time_ms=processing_time,
-        )
-
     except HTTPException:
         raise
     except Exception as e:

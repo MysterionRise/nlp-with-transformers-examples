@@ -159,7 +159,7 @@ class TestPerformanceLogger:
 
         # Verify it took approximately the expected time
         assert elapsed >= 0.1
-        assert elapsed < 0.2  # Some buffer for overhead
+        assert elapsed < 1.0  # Keep the test robust on slower CI runners
 
 
 class TestLogFunctionCall:

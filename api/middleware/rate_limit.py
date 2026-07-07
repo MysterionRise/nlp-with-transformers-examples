@@ -5,6 +5,7 @@ Provides per-user rate limiting with configurable limits based on API key tiers.
 """
 
 import time
+from hashlib import sha256
 from typing import Callable, Optional
 
 from fastapi import HTTPException, Request, Response, status
@@ -13,8 +14,15 @@ from slowapi.errors import RateLimitExceeded
 from slowapi.util import get_remote_address
 from starlette.middleware.base import BaseHTTPMiddleware
 
+from utils.logger import get_logger
+from utils.metrics import record_rate_limit_hit
+
+logger = get_logger(__name__)
+
 # Storage for rate limit tracking (in production, use Redis)
 _rate_limit_storage: dict[str, dict] = {}
+_redis_client = None
+_redis_failed = False
 
 
 def get_api_key_from_request(request: Request) -> str:
@@ -72,6 +80,52 @@ def get_rate_limiter() -> Limiter:
     return limiter
 
 
+def get_redis_client():
+    """Get a Redis client when NLP_REDIS_URL is configured, otherwise None."""
+    global _redis_client, _redis_failed
+    if _redis_client is not None:
+        return _redis_client
+
+    try:
+        from config.settings import get_settings
+
+        redis_url = get_settings().redis_url
+        if not redis_url:
+            return None
+
+        import redis
+
+        client = redis.Redis.from_url(redis_url, decode_responses=True)
+        client.ping()
+        _redis_client = client
+        _redis_failed = False
+        return _redis_client
+    except Exception as e:
+        if not _redis_failed:
+            logger.warning(f"Redis rate limiting unavailable; falling back to memory: {e}")
+            _redis_failed = True
+        return None
+
+
+def get_redis_health() -> dict:
+    """Return Redis rate-limit backend status for readiness checks."""
+    try:
+        from config.settings import get_settings
+
+        configured = bool(get_settings().redis_url)
+    except Exception:
+        configured = False
+
+    client = get_redis_client()
+    if client is None:
+        return {"configured": configured, "available": False}
+    try:
+        client.ping()
+        return {"configured": True, "available": True}
+    except Exception:
+        return {"configured": True, "available": False}
+
+
 def rate_limit_exceeded_handler(request: Request, exc: RateLimitExceeded) -> Response:
     """
     Custom handler for rate limit exceeded errors
@@ -127,6 +181,49 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         current_time = time.time()
         window_start = current_time - self.window_seconds
 
+        redis_client = get_redis_client()
+        if redis_client is not None:
+            redis_key_hash = sha256(key.encode("utf-8")).hexdigest()
+            bucket = int(current_time // self.window_seconds)
+            redis_key = f"nlp-rate-limit:{redis_key_hash}:{bucket}"
+            reset_at = int((bucket + 1) * self.window_seconds)
+
+            try:
+                request_count = int(redis_client.incr(redis_key))
+                if request_count == 1:
+                    redis_client.expire(redis_key, self.window_seconds + 5)
+                remaining = max(0, limit - request_count)
+
+                if request_count > limit:
+                    retry_after = max(1, reset_at - int(current_time))
+                    record_rate_limit_hit(key)
+                    raise HTTPException(
+                        status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+                        detail={
+                            "error": "rate_limit_exceeded",
+                            "message": f"Rate limit exceeded. Maximum {limit} requests per minute.",
+                            "limit": limit,
+                            "retry_after_seconds": retry_after,
+                        },
+                        headers={
+                            "Retry-After": str(retry_after),
+                            "X-RateLimit-Limit": str(limit),
+                            "X-RateLimit-Remaining": "0",
+                            "X-RateLimit-Reset": str(reset_at),
+                        },
+                    )
+
+                response = await call_next(request)
+                response.headers["X-RateLimit-Limit"] = str(limit)
+                response.headers["X-RateLimit-Remaining"] = str(remaining)
+                response.headers["X-RateLimit-Reset"] = str(reset_at)
+                response.headers["X-RateLimit-Backend"] = "redis"
+                return response
+            except HTTPException:
+                raise
+            except Exception as e:
+                logger.warning(f"Redis rate limit check failed; falling back to memory: {e}")
+
         # Get or create tracking entry
         if key not in _rate_limit_storage:
             _rate_limit_storage[key] = {"requests": [], "limit": limit}
@@ -140,6 +237,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         if len(entry["requests"]) >= limit:
             oldest_request = min(entry["requests"]) if entry["requests"] else current_time
             retry_after = int(oldest_request + self.window_seconds - current_time) + 1
+            record_rate_limit_hit(key)
 
             raise HTTPException(
                 status_code=status.HTTP_429_TOO_MANY_REQUESTS,
@@ -168,6 +266,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         response.headers["X-RateLimit-Limit"] = str(limit)
         response.headers["X-RateLimit-Remaining"] = str(remaining)
         response.headers["X-RateLimit-Reset"] = str(int(current_time + self.window_seconds))
+        response.headers["X-RateLimit-Backend"] = "memory"
 
         return response
 

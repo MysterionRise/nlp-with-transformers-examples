@@ -1,5 +1,5 @@
 """
-Configuration package for NLP Transformers Examples
+Configuration package for the Customer Intelligence NLP Platform
 
 This package provides centralized configuration management for all models,
 settings, and application parameters.

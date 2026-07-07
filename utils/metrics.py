@@ -10,6 +10,7 @@ Provides metrics for:
 """
 
 import time
+from collections import defaultdict
 from contextlib import contextmanager
 from functools import wraps
 from typing import Callable, Optional
@@ -18,7 +19,7 @@ from prometheus_client import Counter, Gauge, Histogram, Info, generate_latest
 
 # Application info
 app_info = Info("nlp_api", "NLP API application information")
-app_info.info({"version": "1.0.0", "name": "Enterprise NLP API"})
+app_info.info({"version": "1.0.0", "name": "Customer Intelligence NLP Platform"})
 
 # Request metrics
 http_requests_total = Counter(
@@ -208,6 +209,14 @@ def record_rate_limit_hit(api_key: Optional[str]):
     rate_limit_hits_total.labels(api_key_prefix=prefix).inc()
 
 
+def record_http_request(method: str, endpoint: str, status_code: int, duration_ms: float):
+    """Record HTTP request metrics for Prometheus and status summaries."""
+    duration_seconds = duration_ms / 1000
+    http_request_duration_seconds.labels(method=method, endpoint=endpoint).observe(duration_seconds)
+    http_requests_total.labels(method=method, endpoint=endpoint, status_code=status_code).inc()
+    get_metrics_collector().record_request(method, endpoint, status_code, duration_ms)
+
+
 def get_metrics() -> bytes:
     """
     Generate Prometheus metrics output
@@ -227,6 +236,10 @@ class MetricsCollector:
 
     def __init__(self):
         self._start_time = time.time()
+        self.requests_total = 0
+        self.requests_by_endpoint: dict[str, int] = defaultdict(int)
+        self.latency_totals_ms: dict[str, float] = defaultdict(float)
+        self.errors_by_endpoint: dict[str, int] = defaultdict(int)
 
     @property
     def uptime_seconds(self) -> float:
@@ -240,11 +253,28 @@ class MetricsCollector:
         Returns:
             Dictionary with metric summaries
         """
+        average_latency_ms = {}
+        for endpoint, total_ms in self.latency_totals_ms.items():
+            count = self.requests_by_endpoint.get(endpoint, 0)
+            average_latency_ms[endpoint] = round(total_ms / count, 2) if count else 0.0
+
         return {
             "uptime_seconds": self.uptime_seconds,
+            "requests_total": self.requests_total,
+            "requests_by_endpoint": dict(self.requests_by_endpoint),
+            "average_latency_ms": average_latency_ms,
+            "errors_by_endpoint": dict(self.errors_by_endpoint),
             "cache_size": model_cache_size._value.get(),
             "active_requests": sum(g._value.get() for g in active_requests._metrics.values()),
         }
+
+    def record_request(self, method: str, endpoint: str, status_code: int, duration_ms: float):
+        """Record request metrics in the lightweight in-process summary."""
+        self.requests_total += 1
+        self.requests_by_endpoint[endpoint] += 1
+        self.latency_totals_ms[endpoint] += duration_ms
+        if status_code >= 400:
+            self.errors_by_endpoint[endpoint] += 1
 
 
 # Global metrics collector instance

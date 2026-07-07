@@ -4,9 +4,6 @@ Named Entity Recognition (NER) API Router
 Provides endpoints for extracting named entities from text.
 """
 
-import asyncio
-import time
-from collections import Counter
 from typing import Annotated, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
@@ -14,12 +11,10 @@ from fastapi import APIRouter, Depends, HTTPException, Request, status
 from api.middleware.auth import User, get_current_user
 from api.schemas.requests import NERRequest
 from api.schemas.responses import EntityResponse, NERResponse
-from utils.metrics import record_error, track_inference_time
+from utils.inference import DEFAULT_NER_MODEL, get_inference_service
+from utils.metrics import record_error
 
 router = APIRouter(prefix="/api/v1", tags=["Named Entity Recognition"])
-
-# Default model for NER
-DEFAULT_NER_MODEL = "spacy_sm"
 
 
 async def run_spacy_ner(text: str, entity_types: Optional[List[str]] = None) -> tuple[list, str, float]:
@@ -33,42 +28,8 @@ async def run_spacy_ner(text: str, entity_types: Optional[List[str]] = None) -> 
     Returns:
         Tuple of (entities, model_name, processing_time_ms)
     """
-    start_time = time.time()
-
-    def _inference():
-        import spacy
-
-        try:
-            nlp = spacy.load("en_core_web_sm")
-        except OSError:
-            # Try to download if not available
-            import subprocess
-
-            subprocess.run(["python", "-m", "spacy", "download", "en_core_web_sm"], check=True)
-            nlp = spacy.load("en_core_web_sm")
-
-        doc = nlp(text)
-        entities = []
-
-        for ent in doc.ents:
-            if entity_types is None or ent.label_ in entity_types:
-                entities.append(
-                    {
-                        "text": ent.text,
-                        "label": ent.label_,
-                        "start": ent.start_char,
-                        "end": ent.end_char,
-                        "score": None,  # spaCy doesn't provide confidence scores
-                    }
-                )
-
-        return entities
-
-    with track_inference_time("en_core_web_sm", "ner"):
-        entities = await asyncio.to_thread(_inference)
-
-    processing_time = (time.time() - start_time) * 1000
-    return entities, "en_core_web_sm", processing_time
+    result = await get_inference_service().extract_entities(text, DEFAULT_NER_MODEL, entity_types)
+    return result["entities"], result["model"], result["processing_time_ms"]
 
 
 async def run_transformer_ner(
@@ -85,54 +46,8 @@ async def run_transformer_ner(
     Returns:
         Tuple of (entities, model_id, processing_time_ms)
     """
-    from config.settings import get_model_registry
-    from utils.model_cache import load_model
-
-    registry = get_model_registry()
-
-    try:
-        model_config = registry.get_model("ner", model_key)
-    except KeyError:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail={
-                "error": "invalid_model",
-                "message": f"Model '{model_key}' not found in ner category",
-                "available_models": registry.list_models("ner"),
-            },
-        )
-
-    start_time = time.time()
-
-    def _inference():
-        pipeline = load_model("ner", model_key)
-        return pipeline(text)
-
-    with track_inference_time(model_config.model_id, "ner"):
-        result = await asyncio.to_thread(_inference)
-
-    processing_time = (time.time() - start_time) * 1000
-
-    # Parse transformer NER output
-    entities = []
-    for entity in result:
-        label = entity.get("entity_group", entity.get("entity", "UNKNOWN"))
-        # Remove B-, I- prefixes if present
-        if label.startswith(("B-", "I-")):
-            label = label[2:]
-
-        if entity_types is None or label in entity_types:
-            entities.append(
-                {
-                    "text": entity.get("word", ""),
-                    "label": label,
-                    "start": entity.get("start", 0),
-                    "end": entity.get("end", 0),
-                    "score": entity.get("score"),
-                }
-            )
-
-    return entities, model_config.model_id, processing_time
+    result = await get_inference_service().extract_entities(text, model_key, entity_types)
+    return result["entities"], result["model"], result["processing_time_ms"]
 
 
 @router.post(
@@ -194,14 +109,7 @@ async def extract_entities(
     model_key = body.model or DEFAULT_NER_MODEL
 
     try:
-        # Use spaCy for spacy_* models
-        if model_key.startswith("spacy"):
-            entities, model_id, processing_time = await run_spacy_ner(body.text, body.entity_types)
-        else:
-            entities, model_id, processing_time = await run_transformer_ner(body.text, model_key, body.entity_types)
-
-        # Count entities by type
-        entity_counts = dict(Counter(e["label"] for e in entities))
+        result = await get_inference_service().extract_entities(body.text, model_key, body.entity_types)
 
         # Convert to response format
         entity_responses = [
@@ -212,17 +120,29 @@ async def extract_entities(
                 end=e["end"],
                 score=e.get("score"),
             )
-            for e in entities
+            for e in result["entities"]
         ]
 
         return NERResponse(
             text=body.text,
             entities=entity_responses,
-            entity_counts=entity_counts,
-            model=model_id,
-            processing_time_ms=processing_time,
+            entity_counts=result["entity_counts"],
+            model=result["model"],
+            processing_time_ms=result["processing_time_ms"],
         )
 
+    except KeyError:
+        from config.settings import get_model_registry
+
+        registry = get_model_registry()
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail={
+                "error": "invalid_model",
+                "message": f"Model '{model_key}' not found in ner category",
+                "available_models": registry.list_models("ner"),
+            },
+        )
     except HTTPException:
         raise
     except Exception as e:

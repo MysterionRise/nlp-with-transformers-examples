@@ -1,4 +1,4 @@
-# Dockerfile for NLP Transformers Examples
+# Dockerfile for Customer Intelligence NLP Platform
 # Multi-stage build for optimized image size
 
 # Stage 1: Builder
@@ -25,6 +25,7 @@ WORKDIR /app
 
 # Install runtime dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl \
     libgomp1 \
     libsm6 \
     libxext6 \
@@ -48,8 +49,8 @@ RUN python -m spacy download en_core_web_sm || true
 RUN useradd -m -u 1000 nlpuser && chown -R nlpuser:nlpuser /app
 USER nlpuser
 
-# Expose ports for all UIs
-EXPOSE 7860 7861 7862 7863 7864 7865 7866 7867 7868 7869
+# Expose API and UI ports
+EXPOSE 8000 7860 7861 7862 7863 7864 7865 7866 7867 7868 7869
 
-# Default command: Show UI launcher menu
-CMD ["python", "launch_ui.py"]
+# Default command: run the API server for portfolio deployments
+CMD ["python", "launch_ui.py", "api", "--host", "0.0.0.0"]

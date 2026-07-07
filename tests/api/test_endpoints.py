@@ -25,15 +25,21 @@ TEST_API_KEYS = {
 def _inject_test_api_keys():
     """Inject test API keys into settings for all API tests"""
     from config.settings import get_settings
+    from api.middleware.rate_limit import clear_rate_limit_storage
 
     settings = get_settings()
     original_keys = settings.api.api_keys
     original_secret = settings.api.jwt_secret
+    original_redis_url = settings.redis_url
     settings.api.api_keys = TEST_API_KEYS
     settings.api.jwt_secret = "test-jwt-secret"
+    settings.redis_url = None
+    clear_rate_limit_storage()
     yield
     settings.api.api_keys = original_keys
     settings.api.jwt_secret = original_secret
+    settings.redis_url = original_redis_url
+    clear_rate_limit_storage()
 
 
 @pytest.fixture
@@ -46,6 +52,85 @@ def client():
 def auth_headers():
     """Authentication headers for API requests"""
     return {"X-API-Key": TEST_API_KEY}
+
+
+@pytest.fixture
+def mock_inference_service(monkeypatch):
+    """Mock shared inference service for fast API tests."""
+
+    class FakeInferenceService:
+        async def analyze_sentiment(self, text, model_key="twitter_roberta_multilingual"):
+            return {
+                "text": text,
+                "sentiment": {"label": "positive", "score": 0.91},
+                "all_scores": [{"label": "positive", "score": 0.91}],
+                "model": "fake-sentiment-model",
+                "processing_time_ms": 1.0,
+            }
+
+        async def analyze_sentiment_batch(self, texts, model_key="twitter_roberta_multilingual"):
+            return [await self.analyze_sentiment(text, model_key) for text in texts]
+
+        async def summarize(self, text, model_key="bart_large_cnn", min_length=30, max_length=150):
+            return {
+                "original_text": text,
+                "summary": "Customers like the product but mention delivery delays.",
+                "original_length": len(text),
+                "summary_length": 57,
+                "compression_ratio": 0.5,
+                "model": "fake-summary-model",
+                "processing_time_ms": 1.0,
+            }
+
+        async def extract_entities(self, text, model_key="spacy_sm", entity_types=None):
+            return {
+                "text": text,
+                "entities": [
+                    {
+                        "text": "Apple",
+                        "label": "ORG",
+                        "start": 0,
+                        "end": 5,
+                        "score": None,
+                    }
+                ],
+                "entity_counts": {"ORG": 1},
+                "model": "fake-ner-model",
+                "processing_time_ms": 1.0,
+            }
+
+        async def compute_similarity(self, text1, text2, model_key="all_minilm_l6"):
+            score = 0.83 if "weather" in text1.lower() else 0.21
+            return {
+                "text1": text1,
+                "text2": text2,
+                "similarity_score": score,
+                "model": "fake-embedding-model",
+                "processing_time_ms": 1.0,
+            }
+
+        async def answer_question(self, question, context, model_key="distilbert_squad", top_k=1):
+            return {
+                "question": question,
+                "context": context,
+                "answers": [{"answer": "Paris", "score": 0.95, "start": 52, "end": 57}],
+                "model": "fake-qa-model",
+                "processing_time_ms": 1.0,
+            }
+
+    service = FakeInferenceService()
+
+    for module_path in [
+        "api.routers.sentiment.get_inference_service",
+        "api.routers.summarization.get_inference_service",
+        "api.routers.ner.get_inference_service",
+        "api.routers.similarity.get_inference_service",
+        "api.routers.qa.get_inference_service",
+        "api.routers.customer_intelligence.get_inference_service",
+    ]:
+        monkeypatch.setattr(module_path, lambda service=service: service)
+
+    return service
 
 
 class TestHealthEndpoints:
@@ -87,6 +172,17 @@ class TestHealthEndpoints:
         categories = [item["category"] for item in data]
         assert "sentiment_analysis" in categories or len(categories) > 0
 
+    def test_system_status_has_real_metrics_shape(self, client):
+        """Test status endpoint returns request and latency summaries."""
+        client.get("/health")
+        response = client.get("/api/v1/status")
+        assert response.status_code == 200
+        data = response.json()
+        assert data["requests_total"] >= 1
+        assert isinstance(data["requests_by_endpoint"], dict)
+        assert isinstance(data["average_latency_ms"], dict)
+        assert "model_cache_stats" in data
+
 
 class TestAuthentication:
     """Tests for authentication"""
@@ -107,16 +203,14 @@ class TestAuthentication:
         )
         assert response.status_code == 401
 
-    def test_request_with_valid_api_key_succeeds(self, client, auth_headers):
+    def test_request_with_valid_api_key_succeeds(self, client, auth_headers, mock_inference_service):
         """Test that valid API keys work"""
-        # This may fail if model isn't available, but auth should pass
         response = client.post(
             "/api/v1/sentiment",
             json={"text": "I love this!"},
             headers=auth_headers,
         )
-        # Should either succeed or fail for non-auth reasons
-        assert response.status_code != 401
+        assert response.status_code == 200
 
     def test_get_jwt_token(self, client, auth_headers):
         """Test JWT token generation"""
@@ -127,7 +221,7 @@ class TestAuthentication:
         assert data["token_type"] == "bearer"
         assert "expires_in" in data
 
-    def test_jwt_token_authentication(self, client, auth_headers):
+    def test_jwt_token_authentication(self, client, auth_headers, mock_inference_service):
         """Test that JWT tokens work for authentication"""
         # Get token
         token_response = client.post("/api/v1/auth/token", headers=auth_headers)
@@ -139,8 +233,7 @@ class TestAuthentication:
             json={"text": "Great product!"},
             headers={"Authorization": f"Bearer {token}"},
         )
-        # Should not fail with 401
-        assert response.status_code != 401
+        assert response.status_code == 200
 
 
 class TestRateLimitHeaders:
@@ -238,6 +331,48 @@ class TestErrorResponses:
             assert "invalid_model" in data.get("error", "") or "available_models" in str(data)
 
 
+class TestCustomerIntelligenceEndpoint:
+    """Fast tests for the portfolio workflow endpoint"""
+
+    def test_customer_intelligence_analyze(self, client, auth_headers, mock_inference_service):
+        """Test combined customer intelligence workflow with mocked inference."""
+        response = client.post(
+            "/api/v1/customer-intelligence/analyze",
+            json={
+                "items": [
+                    {
+                        "id": "review-001",
+                        "text": "Apple support was excellent, but delivery took too long.",
+                        "metadata": {"source": "retail"},
+                    },
+                    {
+                        "id": "ticket-002",
+                        "text": "The app is easy to use and support fixed my issue quickly.",
+                    },
+                ],
+                "include_summary": True,
+            },
+            headers=auth_headers,
+        )
+
+        assert response.status_code == 200
+        data = response.json()
+        assert len(data["items"]) == 2
+        assert data["aggregate"]["item_count"] == 2
+        assert data["aggregate"]["sentiment_distribution"]["positive"] == 2
+        assert data["aggregate"]["top_entities"][0]["text"] == "Apple"
+        assert data["aggregate"]["summary"]
+
+    def test_customer_intelligence_requires_auth(self, client):
+        """Test customer intelligence endpoint requires authentication."""
+        response = client.post(
+            "/api/v1/customer-intelligence/analyze",
+            json={"items": [{"text": "Great product."}]},
+        )
+
+        assert response.status_code == 401
+
+
 @pytest.mark.slow
 class TestSentimentEndpoint:
     """Integration tests for sentiment endpoint (requires model download)"""
@@ -250,12 +385,12 @@ class TestSentimentEndpoint:
             headers=auth_headers,
         )
 
-        if response.status_code == 200:
-            data = response.json()
-            assert "sentiment" in data
-            assert "label" in data["sentiment"]
-            assert "score" in data["sentiment"]
-            assert "processing_time_ms" in data
+        assert response.status_code == 200
+        data = response.json()
+        assert "sentiment" in data
+        assert "label" in data["sentiment"]
+        assert "score" in data["sentiment"]
+        assert "processing_time_ms" in data
 
     def test_sentiment_batch(self, client, auth_headers):
         """Test batch sentiment analysis"""
@@ -271,10 +406,10 @@ class TestSentimentEndpoint:
             headers=auth_headers,
         )
 
-        if response.status_code == 200:
-            data = response.json()
-            assert isinstance(data, list)
-            assert len(data) == 3
+        assert response.status_code == 200
+        data = response.json()
+        assert isinstance(data, list)
+        assert len(data) == 3
 
 
 @pytest.mark.slow
@@ -289,11 +424,11 @@ class TestNEREndpoint:
             headers=auth_headers,
         )
 
-        if response.status_code == 200:
-            data = response.json()
-            assert "entities" in data
-            assert "entity_counts" in data
-            assert isinstance(data["entities"], list)
+        assert response.status_code == 200
+        data = response.json()
+        assert "entities" in data
+        assert "entity_counts" in data
+        assert isinstance(data["entities"], list)
 
 
 @pytest.mark.slow
@@ -322,11 +457,11 @@ class TestSummarizationEndpoint:
             headers=auth_headers,
         )
 
-        if response.status_code == 200:
-            data = response.json()
-            assert "summary" in data
-            assert "compression_ratio" in data
-            assert len(data["summary"]) < len(long_text)
+        assert response.status_code == 200
+        data = response.json()
+        assert "summary" in data
+        assert "compression_ratio" in data
+        assert len(data["summary"]) < len(long_text)
 
 
 @pytest.mark.slow
@@ -344,11 +479,11 @@ class TestSimilarityEndpoint:
             headers=auth_headers,
         )
 
-        if response.status_code == 200:
-            data = response.json()
-            assert "similarity_score" in data
-            # Similar texts should have high similarity
-            assert data["similarity_score"] > 0.5
+        assert response.status_code == 200
+        data = response.json()
+        assert "similarity_score" in data
+        # Similar texts should have high similarity
+        assert data["similarity_score"] > 0.5
 
     def test_dissimilar_texts(self, client, auth_headers):
         """Test similarity with dissimilar texts"""
@@ -361,10 +496,10 @@ class TestSimilarityEndpoint:
             headers=auth_headers,
         )
 
-        if response.status_code == 200:
-            data = response.json()
-            # Dissimilar texts should have lower similarity
-            assert data["similarity_score"] < 0.5
+        assert response.status_code == 200
+        data = response.json()
+        # Dissimilar texts should have lower similarity
+        assert data["similarity_score"] < 0.5
 
 
 @pytest.mark.slow
@@ -383,9 +518,9 @@ class TestQAEndpoint:
             headers=auth_headers,
         )
 
-        if response.status_code == 200:
-            data = response.json()
-            assert "answers" in data
-            assert len(data["answers"]) > 0
-            # Answer should contain "Paris"
-            assert "Paris" in data["answers"][0]["answer"]
+        assert response.status_code == 200
+        data = response.json()
+        assert "answers" in data
+        assert len(data["answers"]) > 0
+        # Answer should contain "Paris"
+        assert "Paris" in data["answers"][0]["answer"]

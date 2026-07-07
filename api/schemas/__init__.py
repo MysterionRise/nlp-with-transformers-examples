@@ -2,9 +2,21 @@
 Pydantic schemas for API requests and responses
 """
 
-from .requests import BatchTextRequest, NERRequest, QARequest, SentimentRequest, SimilarityRequest, SummarizationRequest
+from .requests import (
+    BatchTextRequest,
+    CustomerIntelligenceRequest,
+    CustomerTextItem,
+    NERRequest,
+    QARequest,
+    SentimentRequest,
+    SimilarityRequest,
+    SummarizationRequest,
+)
 from .responses import (
     APIError,
+    CustomerInsightItem,
+    CustomerIntelligenceResponse,
+    CustomerIntelligenceSummary,
     EntityResponse,
     HealthResponse,
     MetricsResponse,
@@ -15,6 +27,7 @@ from .responses import (
     SentimentResponse,
     SimilarityResponse,
     SummarizationResponse,
+    TopEntity,
 )
 
 __all__ = [
@@ -25,6 +38,8 @@ __all__ = [
     "SimilarityRequest",
     "QARequest",
     "BatchTextRequest",
+    "CustomerTextItem",
+    "CustomerIntelligenceRequest",
     # Responses
     "SentimentResponse",
     "SummarizationResponse",
@@ -32,6 +47,10 @@ __all__ = [
     "EntityResponse",
     "SimilarityResponse",
     "QAResponse",
+    "TopEntity",
+    "CustomerInsightItem",
+    "CustomerIntelligenceSummary",
+    "CustomerIntelligenceResponse",
     "HealthResponse",
     "MetricsResponse",
     "ModelsListResponse",

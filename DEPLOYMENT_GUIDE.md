@@ -1,4 +1,4 @@
-# Deployment Guide - NLP Transformers Examples
+# Deployment Guide - Customer Intelligence NLP Platform
 
 ## Quick Start
 
@@ -12,10 +12,10 @@ pip install -r requirements-dev.txt
 # Download NER model
 python -m spacy download en_core_web_sm
 
-# Run launcher
-python launch_ui.py
+# Run API server
+python launch_ui.py api
 
-# Or run specific UI
+# Or run a specific optional UI
 python ui/qa_system.py
 ```
 
@@ -34,19 +34,21 @@ docker build -t nlp-transformers-examples:v1.0 .
 #### Run Container
 
 ```bash
-# Run single container with all UIs
+# Run API container
 docker run -d \
-  --name nlp-app \
-  -p 7860-7869:7860-7869 \
+  --name nlp-api \
+  -p 8000:8000 \
+  --env-file .env.example \
   -v huggingface_cache:/home/nlpuser/.cache/huggingface \
   nlp-transformers-examples:latest
 
 # With environment variables
 docker run -d \
-  --name nlp-app \
-  -p 7860-7869:7860-7869 \
+  --name nlp-api \
+  -p 8000:8000 \
   -e NLP_DEBUG=true \
   -e NLP_LOG_LEVEL=INFO \
+  -e NLP_API__JWT_SECRET=replace-me \
   -v huggingface_cache:/home/nlpuser/.cache/huggingface \
   nlp-transformers-examples:latest
 
@@ -63,35 +65,40 @@ docker run -d \
 #### Single Command Deployment
 
 ```bash
-# Launch all UIs
-docker-compose up -d
+# Launch canonical API stack
+docker compose up api redis
 
 # View logs
-docker-compose logs -f ui-launcher
+docker compose logs -f api
 
 # Stop services
-docker-compose down
+docker compose down
 
 # View individual UI logs
-docker-compose logs ui-launcher
-docker-compose logs sentiment
+docker compose logs api
+docker compose --profile ui logs ui-launcher
 ```
 
 #### Launch Individual Services
 
 ```bash
-# Launch only UI launcher
-docker-compose up -d ui-launcher
+# Launch optional UI launcher
+docker compose --profile ui up -d ui-launcher
 
 # Launch individual UIs
-docker-compose --profile individual up -d sentiment
-docker-compose --profile individual up -d qa
-docker-compose --profile individual up -d generation
+docker compose --profile individual up -d sentiment
+docker compose --profile individual up -d qa
+docker compose --profile individual up -d generation
 ```
 
 #### Access UIs
 
-After deployment, access UIs at:
+After API deployment, access:
+- API docs: http://localhost:8000/docs
+- Health: http://localhost:8000/health
+- Metrics: http://localhost:8000/metrics
+
+Optional UIs are available at:
 - Sentiment: http://localhost:7860
 - Similarity: http://localhost:7861
 - NER: http://localhost:7862
@@ -319,8 +326,8 @@ load_model('Twitter RoBERTa (Multilingual)')
 ### Health Checks
 
 ```bash
-# Check individual UI health
-curl http://localhost:7860/api/predict
+# Check API health
+curl http://localhost:8000/health
 
 # Check container health
 docker ps  # HEALTHCHECK status shown
@@ -330,10 +337,10 @@ docker ps  # HEALTHCHECK status shown
 
 ```bash
 # View Docker logs
-docker logs nlp-app -f
+docker logs nlp-api -f
 
 # View Docker Compose logs
-docker-compose logs -f ui-launcher
+docker compose logs -f api
 
 # Kubernetes logs
 kubectl logs deployment/nlp-transformers -f
@@ -453,6 +460,8 @@ kubectl set image deployment/nlp-transformers \
 ---
 
 **For more information, see:**
-- [IMPLEMENTATION_COMPLETE.md](./IMPLEMENTATION_COMPLETE.md) - Feature overview
+- [ARCHITECTURE.md](./ARCHITECTURE.md) - System design and tradeoffs
+- [EVAL_REPORT.md](./EVAL_REPORT.md) - Evaluation results and limitations
+- [OPERATIONS.md](./OPERATIONS.md) - Operational runbook
 - [CLAUDE.md](./CLAUDE.md) - Architecture and configuration
 - [README.md](./README.md) - Project overview

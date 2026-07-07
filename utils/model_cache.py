@@ -16,6 +16,7 @@ from transformers import Pipeline, pipeline
 from config.settings import ModelConfig, get_model_registry, get_settings
 from utils.error_handler import ErrorContext, ModelLoadError, ModelNotFoundError, retry_on_error
 from utils.logger import PerformanceLogger, get_logger
+from utils.metrics import record_cache_eviction, record_cache_hit, record_cache_miss, update_cache_size
 
 logger = get_logger(__name__)
 
@@ -53,7 +54,7 @@ class ModelCache:
         self.model_registry = get_model_registry()
 
         # OrderedDict for LRU cache
-        self._cache: OrderedDict[str, Pipeline] = OrderedDict()
+        self._cache: OrderedDict[str, Any] = OrderedDict()
         self._max_size = self.settings.max_cached_models
         self._device = self._detect_device()
 
@@ -134,6 +135,40 @@ class ModelCache:
             logger.error(f"Failed to load model {model_id}: {str(e)}")
             raise ModelLoadError(model_id, original_error=e)
 
+    @retry_on_error(max_retries=2, delay=1.0)
+    def _load_sentence_transformer(self, model_config: ModelConfig) -> Any:
+        """Load a sentence-transformers model."""
+        model_id = model_config.model_id
+        logger.info(f"Loading sentence transformer: {model_config.name} ({model_id})")
+
+        try:
+            with PerformanceLogger(f"load_sentence_transformer_{model_id}", logger=logger):
+                from sentence_transformers import SentenceTransformer
+
+                model = SentenceTransformer(model_id, cache_folder=str(self.settings.cache_dir))
+                logger.info(f"Successfully loaded sentence transformer: {model_config.name}")
+                return model
+        except Exception as e:
+            logger.error(f"Failed to load sentence transformer {model_id}: {str(e)}")
+            raise ModelLoadError(model_id, original_error=e)
+
+    @retry_on_error(max_retries=1, delay=1.0)
+    def _load_spacy_model(self, model_config: ModelConfig) -> Any:
+        """Load a spaCy model from the registry."""
+        model_id = model_config.model_id
+        logger.info(f"Loading spaCy model: {model_config.name} ({model_id})")
+
+        try:
+            with PerformanceLogger(f"load_spacy_{model_id}", logger=logger):
+                import spacy
+
+                model = spacy.load(model_id)
+                logger.info(f"Successfully loaded spaCy model: {model_config.name}")
+                return model
+        except Exception as e:
+            logger.error(f"Failed to load spaCy model {model_id}: {str(e)}")
+            raise ModelLoadError(model_id, original_error=e)
+
     def _evict_lru(self):
         """Evict the least recently used model from cache"""
         if not self._cache:
@@ -142,12 +177,14 @@ class ModelCache:
         # Remove oldest item (first in OrderedDict)
         cache_key, model = self._cache.popitem(last=False)
         logger.info(f"Evicting model from cache: {cache_key}")
+        record_cache_eviction()
 
         # Clean up memory
         del model
         gc.collect()
         if torch.cuda.is_available():
             torch.cuda.empty_cache()
+        update_cache_size(len(self._cache))
 
     def get_model(
         self,
@@ -177,11 +214,13 @@ class ModelCache:
         # Check cache (unless force reload)
         if not force_reload and cache_key in self._cache:
             logger.debug(f"Cache hit: {cache_key}")
+            record_cache_hit(cache_key)
             # Move to end (mark as recently used)
             self._cache.move_to_end(cache_key)
             return self._cache[cache_key]
 
         logger.debug(f"Cache miss: {cache_key}")
+        record_cache_miss(cache_key)
 
         # Get model configuration
         try:
@@ -200,7 +239,94 @@ class ModelCache:
         # Add to cache
         self._cache[cache_key] = model
         logger.info(f"Added to cache: {cache_key} (cache size: {len(self._cache)}/{self._max_size})")
+        update_cache_size(len(self._cache))
 
+        return model
+
+    def get_sentence_transformer(
+        self,
+        category: str,
+        model_key: str,
+        force_reload: bool = False,
+    ) -> Any:
+        """
+        Get a sentence-transformers model from cache or load it.
+
+        Args:
+            category: Registry category, usually 'embeddings'
+            model_key: Model key within category
+            force_reload: Force reload even if cached
+
+        Returns:
+            Loaded SentenceTransformer model
+        """
+        cache_key = f"sentence-transformers::{category}::{model_key}"
+
+        if not force_reload and cache_key in self._cache:
+            logger.debug(f"Cache hit: {cache_key}")
+            record_cache_hit(cache_key)
+            self._cache.move_to_end(cache_key)
+            return self._cache[cache_key]
+
+        logger.debug(f"Cache miss: {cache_key}")
+        record_cache_miss(cache_key)
+
+        try:
+            model_config = self.model_registry.get_model(category, model_key)
+        except KeyError as e:
+            raise ModelNotFoundError(model_key, category) from e
+
+        while len(self._cache) >= self._max_size:
+            self._evict_lru()
+
+        with ErrorContext("sentence_transformer_loading", category=category, model_key=model_key):
+            model = self._load_sentence_transformer(model_config)
+
+        self._cache[cache_key] = model
+        logger.info(f"Added to cache: {cache_key} (cache size: {len(self._cache)}/{self._max_size})")
+        update_cache_size(len(self._cache))
+        return model
+
+    def get_spacy_model(
+        self,
+        model_key: str,
+        force_reload: bool = False,
+    ) -> Any:
+        """
+        Get a spaCy model from cache or load it from the NER registry.
+
+        Args:
+            model_key: Model key within the 'ner' category
+            force_reload: Force reload even if cached
+
+        Returns:
+            Loaded spaCy language pipeline
+        """
+        cache_key = f"spacy::ner::{model_key}"
+
+        if not force_reload and cache_key in self._cache:
+            logger.debug(f"Cache hit: {cache_key}")
+            record_cache_hit(cache_key)
+            self._cache.move_to_end(cache_key)
+            return self._cache[cache_key]
+
+        logger.debug(f"Cache miss: {cache_key}")
+        record_cache_miss(cache_key)
+
+        try:
+            model_config = self.model_registry.get_model("ner", model_key)
+        except KeyError as e:
+            raise ModelNotFoundError(model_key, "ner") from e
+
+        while len(self._cache) >= self._max_size:
+            self._evict_lru()
+
+        with ErrorContext("spacy_model_loading", category="ner", model_key=model_key):
+            model = self._load_spacy_model(model_config)
+
+        self._cache[cache_key] = model
+        logger.info(f"Added to cache: {cache_key} (cache size: {len(self._cache)}/{self._max_size})")
+        update_cache_size(len(self._cache))
         return model
 
     def get_model_by_id(self, model_id: str, task: str, force_reload: bool = False) -> Pipeline:
@@ -220,8 +346,10 @@ class ModelCache:
         # Check cache
         if not force_reload and cache_key in self._cache:
             logger.debug(f"Cache hit: {cache_key}")
+            record_cache_hit(cache_key)
             self._cache.move_to_end(cache_key)
             return self._cache[cache_key]
+        record_cache_miss(cache_key)
 
         # Evict if cache is full
         while len(self._cache) >= self._max_size:
@@ -238,6 +366,7 @@ class ModelCache:
         # Add to cache
         self._cache[cache_key] = model
         logger.info(f"Added to cache: {cache_key}")
+        update_cache_size(len(self._cache))
 
         return model
 
@@ -248,6 +377,7 @@ class ModelCache:
         gc.collect()
         if torch.cuda.is_available():
             torch.cuda.empty_cache()
+        update_cache_size(0)
 
     def remove_model(self, category: str, model_key: str):
         """Remove a specific model from cache"""
@@ -258,6 +388,7 @@ class ModelCache:
             gc.collect()
             if torch.cuda.is_available():
                 torch.cuda.empty_cache()
+            update_cache_size(len(self._cache))
 
     def warmup(self, models: list[tuple[str, str]]):
         """
@@ -341,6 +472,37 @@ def load_model_by_id(model_id: str, task: str, **kwargs) -> Pipeline:
     """
     cache = get_model_cache()
     return cache.get_model_by_id(model_id, task, **kwargs)
+
+
+def load_sentence_transformer(category: str, model_key: str, **kwargs) -> Any:
+    """
+    Load a sentence-transformers model from the cache.
+
+    Args:
+        category: Registry category
+        model_key: Model key
+        **kwargs: Additional arguments passed to get_sentence_transformer
+
+    Returns:
+        Loaded SentenceTransformer model
+    """
+    cache = get_model_cache()
+    return cache.get_sentence_transformer(category, model_key, **kwargs)
+
+
+def load_spacy_model(model_key: str, **kwargs) -> Any:
+    """
+    Load a spaCy model from the cache.
+
+    Args:
+        model_key: NER registry model key
+        **kwargs: Additional arguments passed to get_spacy_model
+
+    Returns:
+        Loaded spaCy pipeline
+    """
+    cache = get_model_cache()
+    return cache.get_spacy_model(model_key, **kwargs)
 
 
 def clear_model_cache():

@@ -1,5 +1,5 @@
 """
-Settings and configuration management for NLP Transformers Examples
+Settings and configuration management for the Customer Intelligence NLP Platform
 
 Uses Pydantic for settings validation and YAML for model configurations.
 """
@@ -10,7 +10,7 @@ from typing import Any, Dict, List, Optional
 
 import yaml
 from pydantic import BaseModel, Field
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class APIKeyConfig(BaseModel):
@@ -77,7 +77,7 @@ class Settings(BaseSettings):
     """
 
     # Application settings
-    app_name: str = "NLP Transformers Examples"
+    app_name: str = "Customer Intelligence NLP Platform"
     debug: bool = Field(default=False, description="Enable debug mode")
     log_level: str = Field(default="INFO", description="Logging level")
 
@@ -99,6 +99,11 @@ class Settings(BaseSettings):
     max_workers: int = Field(default=4, description="Maximum number of workers for parallel processing")
     batch_size: int = Field(default=8, description="Default batch size for processing")
 
+    # Production integration settings
+    redis_url: Optional[str] = Field(default=None, description="Redis URL for shared rate limiting")
+    otel_enabled: bool = Field(default=False, description="Enable optional OpenTelemetry instrumentation")
+    json_logs: bool = Field(default=False, description="Emit JSON-formatted logs")
+
     # Paths
     project_root: Path = Field(
         default_factory=lambda: Path(__file__).parent.parent, description="Project root directory"
@@ -113,11 +118,13 @@ class Settings(BaseSettings):
     api_host: str = Field(default="127.0.0.1", description="API server host")
     api_port: int = Field(default=8000, description="API server port")
 
-    class Config:
-        env_prefix = "NLP_"
-        case_sensitive = False
-        env_file = ".env"
-        env_file_encoding = "utf-8"
+    model_config = SettingsConfigDict(
+        env_prefix="NLP_",
+        env_nested_delimiter="__",
+        case_sensitive=False,
+        env_file=".env",
+        env_file_encoding="utf-8",
+    )
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)

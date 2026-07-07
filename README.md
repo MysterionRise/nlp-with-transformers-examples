@@ -1,6 +1,6 @@
-# Transformers NLP Suite
+# Customer Intelligence NLP Platform
 
-Enterprise NLP Platform with production REST API, authentication, rate limiting, observability, and interactive UIs. Built with Hugging Face Transformers, FastAPI, and Gradio.
+API-first Customer Intelligence platform for analyzing reviews, support notes, and market text with transformer-based NLP. Built with Hugging Face Transformers, FastAPI, Redis-backed rate limiting, Prometheus metrics, and optional Gradio demos.
 
 [![Dependabot](https://img.shields.io/badge/Dependabot-enabled-brightgreen.svg)](https://github.com/MysterionRise/transformers-nlp-suite/network/updates)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
@@ -8,12 +8,13 @@ Enterprise NLP Platform with production REST API, authentication, rate limiting,
 
 ## 🎯 Features
 
-### Enterprise REST API (NEW!)
+### Customer Intelligence REST API
 - 🚀 **Production FastAPI Server** - Full REST API with OpenAPI/Swagger documentation
 - 🔐 **Authentication** - API key and JWT token support
-- ⏱️ **Rate Limiting** - Per-user rate limits with configurable tiers
-- 📊 **Prometheus Metrics** - Full observability with `/metrics` endpoint
+- ⏱️ **Rate Limiting** - Redis-backed per-user limits with in-memory local fallback
+- 📊 **Prometheus Metrics** - Request, inference, cache, auth, and rate-limit metrics
 - 📚 **Interactive Docs** - Swagger UI at `/docs` and ReDoc at `/redoc`
+- 🧭 **Portfolio Workflow** - `/api/v1/customer-intelligence/analyze` combines sentiment, NER, aggregates, and summaries
 
 ### Interactive UIs
 - 🎭 **Sentiment Analysis Playground** - Analyze sentiment with multiple models
@@ -85,6 +86,18 @@ python ui/performance_dashboard.py    # Port 7864
 ```
 
 ### Launch REST API Server
+
+**Docker Compose (recommended portfolio path):**
+```bash
+docker compose up api redis
+```
+
+Then open:
+- **Swagger UI**: http://localhost:8000/docs
+- **Health Check**: http://localhost:8000/health
+- **Prometheus Metrics**: http://localhost:8000/metrics
+
+The Compose API service uses `.env.example` for a local demo key. For any shared deployment, copy it to `.env` and replace the secret and key values.
 
 ```bash
 # Launch API server
@@ -206,7 +219,7 @@ Compare and evaluate model outputs using comprehensive NLP metrics.
 
 ## 🚀 REST API
 
-The Enterprise NLP API provides production-ready REST endpoints for all NLP tasks.
+The Customer Intelligence API provides production-ready REST endpoints for core NLP tasks and the portfolio workflow.
 
 ### API Endpoints
 
@@ -230,7 +243,7 @@ All API endpoints require authentication via:
 **API Key** (recommended for scripts):
 ```bash
 curl -X POST http://localhost:8000/api/v1/sentiment \
-  -H "X-API-Key: dev-api-key" \
+  -H "X-API-Key: demo-customer-intel-key" \
   -H "Content-Type: application/json" \
   -d '{"text": "I love this product!"}'
 ```
@@ -239,7 +252,7 @@ curl -X POST http://localhost:8000/api/v1/sentiment \
 ```bash
 # Get token
 TOKEN=$(curl -s -X POST http://localhost:8000/api/v1/auth/token \
-  -H "X-API-Key: dev-api-key" | jq -r '.access_token')
+  -H "X-API-Key: demo-customer-intel-key" | jq -r '.access_token')
 
 # Use token
 curl -X POST http://localhost:8000/api/v1/sentiment \
@@ -253,7 +266,7 @@ curl -X POST http://localhost:8000/api/v1/sentiment \
 **Sentiment Analysis:**
 ```bash
 curl -X POST http://localhost:8000/api/v1/sentiment \
-  -H "X-API-Key: dev-api-key" \
+  -H "X-API-Key: demo-customer-intel-key" \
   -H "Content-Type: application/json" \
   -d '{
     "text": "This product exceeded all my expectations!",
@@ -264,7 +277,7 @@ curl -X POST http://localhost:8000/api/v1/sentiment \
 **Text Summarization:**
 ```bash
 curl -X POST http://localhost:8000/api/v1/summarize \
-  -H "X-API-Key: dev-api-key" \
+  -H "X-API-Key: demo-customer-intel-key" \
   -H "Content-Type: application/json" \
   -d '{
     "text": "Artificial intelligence has transformed numerous industries...",
@@ -276,7 +289,7 @@ curl -X POST http://localhost:8000/api/v1/summarize \
 **Named Entity Recognition:**
 ```bash
 curl -X POST http://localhost:8000/api/v1/ner \
-  -H "X-API-Key: dev-api-key" \
+  -H "X-API-Key: demo-customer-intel-key" \
   -H "Content-Type: application/json" \
   -d '{
     "text": "Apple CEO Tim Cook announced new products in Cupertino.",
@@ -287,7 +300,7 @@ curl -X POST http://localhost:8000/api/v1/ner \
 **Semantic Similarity:**
 ```bash
 curl -X POST http://localhost:8000/api/v1/similarity \
-  -H "X-API-Key: dev-api-key" \
+  -H "X-API-Key: demo-customer-intel-key" \
   -H "Content-Type: application/json" \
   -d '{
     "text1": "The weather is beautiful today.",
@@ -298,7 +311,7 @@ curl -X POST http://localhost:8000/api/v1/similarity \
 **Question Answering:**
 ```bash
 curl -X POST http://localhost:8000/api/v1/qa \
-  -H "X-API-Key: dev-api-key" \
+  -H "X-API-Key: demo-customer-intel-key" \
   -H "Content-Type: application/json" \
   -d '{
     "question": "What is the capital of France?",
@@ -429,6 +442,7 @@ Comprehensive NLP evaluation with BLEU, ROUGE, METEOR, BERTScore.
 - plotly>=5.17.0 - Visualizations
 - scikit-learn - ML utilities
 - umap-learn - Dimensionality reduction
+- pandas - Dashboard and tabular evaluation outputs
 
 ### Evaluation
 - nltk - BLEU scores
@@ -441,20 +455,36 @@ Comprehensive NLP evaluation with BLEU, ROUGE, METEOR, BERTScore.
 - python-jose[cryptography] - JWT authentication
 - slowapi - Rate limiting
 - prometheus-client - Metrics
+- redis - Shared rate-limit backend
 
 See `requirements.txt` for full list.
 
+**Customer Intelligence Workflow:**
+```bash
+curl -X POST http://localhost:8000/api/v1/customer-intelligence/analyze \
+  -H "X-API-Key: demo-customer-intel-key" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "items": [
+      {"id": "review-001", "text": "The product is excellent, but delivery took too long."},
+      {"id": "ticket-002", "text": "Support resolved my issue quickly and the mobile app is easy to use."}
+    ],
+    "include_summary": true
+  }'
+```
+
 ## 🎓 Use Cases
 
-- **Education**: Learn NLP concepts interactively
-- **Prototyping**: Quickly test transformer models
-- **Research**: Compare model performance
-- **Development**: Build NLP applications
-- **Demo**: Showcase NLP capabilities
+- **Customer Intelligence**: Analyze reviews, support notes, and customer feedback
+- **AI Platform Review**: Demonstrate API design, model caching, auth, metrics, and deployment
+- **Model Evaluation**: Compare NLP outputs and track quality/latency tradeoffs
+- **Portfolio Demo**: Showcase production-minded AI engineering decisions
 
 ## 📖 Additional Resources
 
-- [Implementation Plan](IMPLEMENTATION_PLAN.md) - Detailed feature roadmap
+- [Architecture](ARCHITECTURE.md) - System design and tradeoffs
+- [Evaluation Report](EVAL_REPORT.md) - Quality checks, risks, and limitations
+- [Operations Guide](OPERATIONS.md) - Local, Docker, and cloud operations
 - [Hugging Face Transformers Docs](https://huggingface.co/docs/transformers)
 - [Spacy Documentation](https://spacy.io/usage)
 - [Gradio Documentation](https://gradio.app/docs/)

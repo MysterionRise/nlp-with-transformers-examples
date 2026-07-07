@@ -183,25 +183,24 @@ class TestRetryOnErrorDecorator:
         with pytest.raises(TypeError, match="Type error"):
             raises_type_error()
 
-    def test_retry_backoff(self):
+    def test_retry_backoff(self, monkeypatch):
         """Test exponential backoff"""
-        times = []
+        sleep_delays = []
+
+        def fake_sleep(delay):
+            sleep_delays.append(delay)
+
+        monkeypatch.setattr(time, "sleep", fake_sleep)
 
         @retry_on_error(max_retries=2, delay=0.01, backoff=2.0)
         def measure_delays():
-            times.append(time.time())
-            if len(times) < 3:
+            if len(sleep_delays) < 2:
                 raise ValueError("Retry")
             return "success"
 
         result = measure_delays()
         assert result == "success"
-
-        # Check that delays increase (with some tolerance for timing)
-        if len(times) >= 3:
-            delay1 = times[1] - times[0]
-            delay2 = times[2] - times[1]
-            assert delay2 > delay1 or abs(delay2 - delay1 * 2) < 0.05
+        assert sleep_delays == [0.01, 0.02]
 
 
 class TestValidateInputDecorator:

@@ -1,7 +1,51 @@
 version: '3.8'
 
 services:
-  # Main UI Launcher
+  # Canonical API service for portfolio review
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: nlp-api
+    command: python launch_ui.py api --host 0.0.0.0 --port 8000
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env.example
+    environment:
+      - PYTHONUNBUFFERED=1
+      - NLP_REDIS_URL=redis://redis:6379/0
+    volumes:
+      - ./data:/app/data:ro
+      - ./logs:/app/logs
+      - huggingface_cache:/home/nlpuser/.cache/huggingface
+    depends_on:
+      - redis
+    networks:
+      - nlp-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  redis:
+    image: redis:7-alpine
+    container_name: nlp-redis
+    ports:
+      - "6379:6379"
+    networks:
+      - nlp-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  # UI launcher is optional: docker compose --profile ui up ui-launcher
   ui-launcher:
     build:
       context: .
@@ -35,6 +79,7 @@ services:
       timeout: 10s
       retries: 3
       start_period: 40s
+    profiles: ["ui"]
 
   # Individual UIs (optional, can be launched separately if needed)
   sentiment:

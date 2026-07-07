@@ -1,5 +1,5 @@
 """
-FastAPI Application - Enterprise NLP API
+FastAPI Application - Customer Intelligence NLP Platform
 
 Production-ready REST API for NLP inference with:
 - JWT and API key authentication
@@ -18,7 +18,7 @@ from fastapi.responses import JSONResponse
 
 from api.middleware.logging import RequestLoggingMiddleware
 from api.middleware.rate_limit import RateLimitMiddleware
-from api.routers import health, ner, qa, sentiment, similarity, summarization
+from api.routers import customer_intelligence, health, ner, qa, sentiment, similarity, summarization
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -34,7 +34,7 @@ async def lifespan(app: FastAPI):
     - Shutdown: Clean up resources
     """
     # Startup
-    logger.info("Starting Enterprise NLP API...")
+    logger.info("Starting Customer Intelligence NLP Platform API...")
 
     # Set startup time for health endpoint
     from api.routers.health import set_startup_time
@@ -55,12 +55,12 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         logger.warning(f"Could not load settings: {e}")
 
-    logger.info("Enterprise NLP API started successfully")
+    logger.info("Customer Intelligence NLP Platform API started successfully")
 
     yield
 
     # Shutdown
-    logger.info("Shutting down Enterprise NLP API...")
+    logger.info("Shutting down Customer Intelligence NLP Platform API...")
 
     # Clear model cache to free memory
     try:
@@ -70,7 +70,7 @@ async def lifespan(app: FastAPI):
     except Exception:
         pass
 
-    logger.info("Enterprise NLP API shut down complete")
+    logger.info("Customer Intelligence NLP Platform API shut down complete")
 
 
 def create_app() -> FastAPI:
@@ -81,11 +81,12 @@ def create_app() -> FastAPI:
         Configured FastAPI application instance
     """
     app = FastAPI(
-        title="Enterprise NLP API",
+        title="Customer Intelligence NLP Platform",
         description="""
 ## Overview
 
-Production-ready REST API for Natural Language Processing tasks.
+API-first Customer Intelligence platform for turning reviews, support notes,
+and market text into structured NLP signals.
 
 ### Features
 
@@ -94,6 +95,7 @@ Production-ready REST API for Natural Language Processing tasks.
 - **Named Entity Recognition**: Extract people, organizations, locations, dates
 - **Semantic Similarity**: Compare text similarity using embeddings
 - **Question Answering**: Extract answers from context
+- **Customer Intelligence Workflow**: Combine sentiment, entities, aggregates, and summaries
 
 ### Authentication
 
@@ -140,13 +142,32 @@ All errors follow a consistent format:
         openapi_url="/openapi.json",
     )
 
+    # Optional OpenTelemetry instrumentation. The packages are intentionally
+    # optional so local portfolio setup stays lightweight unless enabled.
+    try:
+        from config.settings import get_settings
+
+        settings = get_settings()
+        if settings.otel_enabled:
+            from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
+
+            FastAPIInstrumentor.instrument_app(app)
+            logger.info("OpenTelemetry FastAPI instrumentation enabled")
+    except Exception as e:
+        logger.warning(f"OpenTelemetry instrumentation not enabled: {e}")
+
     # Add CORS middleware - origins loaded from settings (default: localhost only)
     try:
         from config.settings import get_settings
 
-        cors_origins = get_settings().api.cors_origins
+        settings = get_settings()
+        cors_origins = settings.api.cors_origins
+        default_rate_limit = settings.api.default_rate_limit
+        rate_limit_window_seconds = settings.api.rate_limit_window_seconds
     except Exception:
         cors_origins = ["http://localhost:3000", "http://localhost:8000"]
+        default_rate_limit = 100
+        rate_limit_window_seconds = 60
 
     app.add_middleware(
         CORSMiddleware,
@@ -165,7 +186,11 @@ All errors follow a consistent format:
 
     # Add custom middleware
     app.add_middleware(RequestLoggingMiddleware)
-    app.add_middleware(RateLimitMiddleware, default_limit=100, window_seconds=60)
+    app.add_middleware(
+        RateLimitMiddleware,
+        default_limit=default_rate_limit,
+        window_seconds=rate_limit_window_seconds,
+    )
 
     # Include routers
     app.include_router(health.router)
@@ -174,6 +199,7 @@ All errors follow a consistent format:
     app.include_router(ner.router)
     app.include_router(similarity.router)
     app.include_router(qa.router)
+    app.include_router(customer_intelligence.router)
 
     # Custom exception handlers
     @app.exception_handler(HTTPException)
@@ -276,6 +302,10 @@ def custom_openapi() -> Dict[str, Any]:
         {
             "name": "Question Answering",
             "description": "Extract answers from context passages",
+        },
+        {
+            "name": "Customer Intelligence",
+            "description": "Analyze customer feedback with combined NLP signals",
         },
     ]
 

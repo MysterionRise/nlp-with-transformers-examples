@@ -1,0 +1,20 @@
+[
+  {
+    "id": "retail-positive-delivery-negative",
+    "text": "The product quality is excellent and the app is easy to use, but delivery took too long.",
+    "expected_sentiment_any": ["positive", "neutral"],
+    "expected_entities": []
+  },
+  {
+    "id": "support-positive",
+    "text": "Apple support resolved my billing issue quickly in New York.",
+    "expected_sentiment_any": ["positive"],
+    "expected_entities": ["Apple", "New York"]
+  },
+  {
+    "id": "service-negative",
+    "text": "The checkout failed twice and customer service did not respond for three days.",
+    "expected_sentiment_any": ["negative"],
+    "expected_entities": []
+  }
+]

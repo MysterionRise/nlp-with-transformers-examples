@@ -74,11 +74,21 @@ def verify_api_key(api_key: str) -> Optional[User]:
     api_keys = api_settings.api_keys
 
     if api_key not in api_keys:
+        from utils.metrics import record_auth_attempt
+
+        record_auth_attempt("api_key", False)
         return None
 
     user_data = api_keys[api_key]
     if not user_data.get("enabled", True):
+        from utils.metrics import record_auth_attempt
+
+        record_auth_attempt("api_key", False)
         return None
+
+    from utils.metrics import record_auth_attempt
+
+    record_auth_attempt("api_key", True)
 
     return User(
         api_key=api_key,
@@ -147,9 +157,16 @@ def verify_jwt_token(token: str) -> Optional[User]:
             return None
 
         # Verify the underlying API key is still valid
-        return verify_api_key(api_key)
+        user = verify_api_key(api_key)
+        from utils.metrics import record_auth_attempt
+
+        record_auth_attempt("jwt", user is not None)
+        return user
 
     except JWTError:
+        from utils.metrics import record_auth_attempt
+
+        record_auth_attempt("jwt", False)
         return None
 
 

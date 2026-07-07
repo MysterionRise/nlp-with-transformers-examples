@@ -289,6 +289,72 @@ class QAResponse(BaseModel):
     }
 
 
+class TopEntity(BaseModel):
+    """Aggregated entity count for customer intelligence responses"""
+
+    text: str = Field(..., description="Entity text")
+    label: str = Field(..., description="Entity type label")
+    count: int = Field(..., ge=1, description="Number of occurrences")
+
+
+class CustomerInsightItem(BaseModel):
+    """Per-item customer intelligence result"""
+
+    id: Optional[str] = Field(default=None, description="Caller-provided item identifier")
+    text: str = Field(..., description="Original input text")
+    metadata: Optional[Dict[str, Any]] = Field(default=None, description="Caller-provided metadata")
+    sentiment: SentimentResult = Field(..., description="Primary sentiment prediction")
+    entities: List[EntityResponse] = Field(..., description="Extracted entities")
+    processing_time_ms: float = Field(..., description="Per-item processing time in milliseconds")
+
+
+class CustomerIntelligenceSummary(BaseModel):
+    """Aggregate customer intelligence signals"""
+
+    item_count: int = Field(..., ge=1, description="Number of analyzed items")
+    sentiment_distribution: Dict[str, int] = Field(..., description="Counts by sentiment label")
+    top_entities: List[TopEntity] = Field(..., description="Most frequent extracted entities")
+    summary: Optional[str] = Field(default=None, description="Optional generated summary across all items")
+    model_ids: Dict[str, str] = Field(..., description="Model IDs used by task")
+
+
+class CustomerIntelligenceResponse(BaseModel):
+    """Response model for customer intelligence analysis"""
+
+    items: List[CustomerInsightItem] = Field(..., description="Per-item analysis results")
+    aggregate: CustomerIntelligenceSummary = Field(..., description="Aggregate customer intelligence signals")
+    processing_time_ms: float = Field(..., description="End-to-end processing time in milliseconds")
+
+    model_config = {
+        "json_schema_extra": {
+            "example": {
+                "items": [
+                    {
+                        "id": "review-001",
+                        "text": "The product is excellent, but delivery took too long.",
+                        "metadata": {"source": "retail_reviews"},
+                        "sentiment": {"label": "positive", "score": 0.91},
+                        "entities": [],
+                        "processing_time_ms": 65.4,
+                    }
+                ],
+                "aggregate": {
+                    "item_count": 1,
+                    "sentiment_distribution": {"positive": 1},
+                    "top_entities": [],
+                    "summary": "Customers praise product quality while noting delivery delays.",
+                    "model_ids": {
+                        "sentiment": "cardiffnlp/twitter-xlm-roberta-base-sentiment",
+                        "ner": "en_core_web_sm",
+                        "summary": "facebook/bart-large-cnn",
+                    },
+                },
+                "processing_time_ms": 210.7,
+            }
+        }
+    }
+
+
 class HealthResponse(BaseModel):
     """Response model for health check endpoint"""
 

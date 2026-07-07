@@ -4,8 +4,6 @@ Semantic Similarity API Router
 Provides endpoints for computing text similarity using sentence embeddings.
 """
 
-import asyncio
-import time
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
@@ -13,12 +11,10 @@ from fastapi import APIRouter, Depends, HTTPException, Request, status
 from api.middleware.auth import User, get_current_user
 from api.schemas.requests import SimilarityRequest
 from api.schemas.responses import SimilarityResponse
-from utils.metrics import record_error, track_inference_time
+from utils.inference import DEFAULT_SIMILARITY_MODEL, get_inference_service
+from utils.metrics import record_error
 
 router = APIRouter(prefix="/api/v1", tags=["Semantic Similarity"])
-
-# Default model for similarity
-DEFAULT_SIMILARITY_MODEL = "minilm"
 
 
 def compute_cosine_similarity(embedding1, embedding2) -> float:
@@ -87,15 +83,23 @@ async def compute_similarity(
 
     **Authentication required:** API key or JWT token
     """
-    from config.settings import get_model_registry
-
     model_key = body.model or DEFAULT_SIMILARITY_MODEL
-    registry = get_model_registry()
 
-    # Get model config
     try:
-        model_config = registry.get_model("embeddings", model_key)
+        result = await get_inference_service().compute_similarity(body.text1, body.text2, model_key)
+
+        return SimilarityResponse(
+            text1=body.text1,
+            text2=body.text2,
+            similarity_score=result["similarity_score"],
+            model=result["model"],
+            processing_time_ms=result["processing_time_ms"],
+        )
+
     except KeyError:
+        from config.settings import get_model_registry
+
+        registry = get_model_registry()
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail={
@@ -104,37 +108,6 @@ async def compute_similarity(
                 "available_models": registry.list_models("embeddings"),
             },
         )
-
-    try:
-        start_time = time.time()
-
-        def _inference():
-            # For sentence-transformers models, use the dedicated library
-            from sentence_transformers import SentenceTransformer
-
-            # Load model (sentence-transformers has its own caching)
-            model = SentenceTransformer(model_config.model_id)
-
-            # Generate embeddings for both texts
-            embeddings = model.encode([body.text1, body.text2])
-
-            return embeddings[0], embeddings[1]
-
-        with track_inference_time(model_config.model_id, "similarity"):
-            emb1, emb2 = await asyncio.to_thread(_inference)
-
-        # Compute cosine similarity
-        similarity = compute_cosine_similarity(emb1, emb2)
-        processing_time = (time.time() - start_time) * 1000
-
-        return SimilarityResponse(
-            text1=body.text1,
-            text2=body.text2,
-            similarity_score=round(similarity, 4),
-            model=model_config.model_id,
-            processing_time_ms=processing_time,
-        )
-
     except HTTPException:
         raise
     except Exception as e:

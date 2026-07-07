@@ -1,10 +1,11 @@
 """
-Logging utilities for NLP Transformers Examples
+Logging utilities for the Customer Intelligence NLP Platform
 
 Provides structured logging with rotation, formatting, and performance tracking.
 """
 
 import logging
+import json
 import sys
 import time
 from logging.handlers import RotatingFileHandler
@@ -39,6 +40,40 @@ class ColoredFormatter(logging.Formatter):
                 record.name = f"\033[34m{record.name}{COLORS['RESET']}"  # Blue
 
         return super().format(record)
+
+
+class JsonFormatter(logging.Formatter):
+    """JSON formatter for production log ingestion."""
+
+    def format(self, record):
+        payload = {
+            "timestamp": self.formatTime(record, self.datefmt),
+            "level": record.levelname,
+            "logger": record.name,
+            "message": record.getMessage(),
+        }
+
+        for field in [
+            "request_id",
+            "method",
+            "path",
+            "query",
+            "client_ip",
+            "status_code",
+            "processing_time_ms",
+            "user",
+            "auth_method",
+            "error",
+            "model",
+            "task",
+        ]:
+            if hasattr(record, field):
+                payload[field] = getattr(record, field)
+
+        if record.exc_info:
+            payload["exception"] = self.formatException(record.exc_info)
+
+        return json.dumps(payload, default=str)
 
 
 class PerformanceLogger:
@@ -82,6 +117,7 @@ def setup_logger(
     backup_count: int = 5,
     format_string: Optional[str] = None,
     use_colors: bool = True,
+    json_logs: bool = False,
 ) -> logging.Logger:
     """
     Set up a logger with console and optional file handlers
@@ -113,7 +149,7 @@ def setup_logger(
     # Console handler with colors
     console_handler = logging.StreamHandler(sys.stderr)
     console_handler.setLevel(getattr(logging, level.upper()))
-    console_formatter = ColoredFormatter(format_string, use_colors=use_colors)
+    console_formatter = JsonFormatter() if json_logs else ColoredFormatter(format_string, use_colors=use_colors)
     console_handler.setFormatter(console_formatter)
     logger.addHandler(console_handler)
 
@@ -124,7 +160,7 @@ def setup_logger(
 
         file_handler = RotatingFileHandler(log_file, maxBytes=max_bytes, backupCount=backup_count)
         file_handler.setLevel(getattr(logging, level.upper()))
-        file_formatter = logging.Formatter(format_string)
+        file_formatter = JsonFormatter() if json_logs else logging.Formatter(format_string)
         file_handler.setFormatter(file_formatter)
         logger.addHandler(file_handler)
 
@@ -152,12 +188,14 @@ def get_logger(name: str, level: Optional[str] = None, log_file: Optional[Path] 
             level = settings.log_level
         if log_file is None and settings.logs_dir:
             log_file = settings.logs_dir / f"{name.replace('.', '_')}.log"
+        json_logs = settings.json_logs
     except Exception:
         # Fallback if settings not available
         if level is None:
             level = "INFO"
+        json_logs = False
 
-    return setup_logger(name=name, level=level, log_file=log_file)
+    return setup_logger(name=name, level=level, log_file=log_file, json_logs=json_logs)
 
 
 def log_function_call(logger: Optional[logging.Logger] = None, level: int = logging.DEBUG):
@@ -224,7 +262,7 @@ class LoggerAdapter(logging.LoggerAdapter):
         return msg, kwargs
 
 
-def configure_root_logger(level: str = "INFO", log_dir: Optional[Path] = None):
+def configure_root_logger(level: str = "INFO", log_dir: Optional[Path] = None, json_logs: bool = False):
     """
     Configure the root logger for the entire application
 
@@ -245,6 +283,7 @@ def configure_root_logger(level: str = "INFO", log_dir: Optional[Path] = None):
         log_file=log_file,
         format_string="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
         use_colors=True,
+        json_logs=json_logs,
     )
 
 
@@ -262,7 +301,7 @@ def init_logging(debug: bool = False):
         from config.settings import get_settings
 
         settings = get_settings()
-        configure_root_logger(level=settings.log_level, log_dir=settings.logs_dir)
+        configure_root_logger(level=settings.log_level, log_dir=settings.logs_dir, json_logs=settings.json_logs)
     except Exception:
         # Fallback if settings not available
         configure_root_logger(level=level)
