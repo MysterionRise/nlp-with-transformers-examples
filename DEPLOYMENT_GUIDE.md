@@ -1,467 +1,175 @@
-# Deployment Guide - Customer Intelligence NLP Platform
+# Deployment Guide
 
-## Quick Start
-
-### Local Development
+## Canonical Local Deployment
 
 ```bash
-# Install dependencies
-pip install -r requirements.txt
-pip install -r requirements-dev.txt
-
-# Download NER model
-python -m spacy download en_core_web_sm
-
-# Run API server
-python launch_ui.py api
-
-# Or run a specific optional UI
-python ui/qa_system.py
+docker compose up api redis
 ```
 
-### Docker Deployment
+This starts:
 
-#### Build Image
+- `api`: FastAPI service on port `8000`
+- `redis`: Redis rate-limit backend on port `6379`
+
+The API service reads `.env.example` so a fresh clone can run immediately for local portfolio review.
+
+## Build Image
 
 ```bash
-# Build Docker image
-docker build -t nlp-transformers-examples:latest .
-
-# Or with specific tag
-docker build -t nlp-transformers-examples:v1.0 .
+docker build -t customer-intelligence-nlp:latest .
 ```
 
-#### Run Container
+The Dockerfile defaults to:
 
 ```bash
-# Run API container
-docker run -d \
-  --name nlp-api \
+python launch_ui.py api --host 0.0.0.0
+```
+
+It exposes port `8000` plus optional Gradio UI ports.
+
+## Run A Single API Container
+
+For local testing without Compose:
+
+```bash
+docker run --rm \
+  --name customer-intelligence-api \
   -p 8000:8000 \
   --env-file .env.example \
+  -e NLP_REDIS_URL= \
   -v huggingface_cache:/home/nlpuser/.cache/huggingface \
-  nlp-transformers-examples:latest
-
-# With environment variables
-docker run -d \
-  --name nlp-api \
-  -p 8000:8000 \
-  -e NLP_DEBUG=true \
-  -e NLP_LOG_LEVEL=INFO \
-  -e NLP_API__JWT_SECRET=replace-me \
-  -v huggingface_cache:/home/nlpuser/.cache/huggingface \
-  nlp-transformers-examples:latest
-
-# Run specific UI
-docker run -d \
-  --name nlp-qa \
-  -p 7865:7865 \
-  nlp-transformers-examples:latest \
-  python ui/qa_system.py
+  customer-intelligence-nlp:latest
 ```
 
-### Docker Compose Deployment
+The explicit empty `NLP_REDIS_URL` disables Redis for this single-container example. Use Docker Compose or a real Redis URL when you want shared rate limiting.
 
-#### Single Command Deployment
+For any shared deployment, do not use `.env.example` directly. Configure real secrets:
 
 ```bash
-# Launch canonical API stack
+NLP_API__JWT_SECRET=<secret>
+NLP_API__API_KEYS=<json map of keys>
+NLP_REDIS_URL=<redis url>
+NLP_LOG_LEVEL=INFO
+NLP_JSON_LOGS=true
+```
+
+## Docker Compose Operations
+
+```bash
 docker compose up api redis
-
-# View logs
 docker compose logs -f api
-
-# Stop services
 docker compose down
-
-# View individual UI logs
-docker compose logs api
-docker compose --profile ui logs ui-launcher
 ```
 
-#### Launch Individual Services
+Optional UI services:
 
 ```bash
-# Launch optional UI launcher
-docker compose --profile ui up -d ui-launcher
-
-# Launch individual UIs
-docker compose --profile individual up -d sentiment
-docker compose --profile individual up -d qa
-docker compose --profile individual up -d generation
+docker compose --profile ui up ui-launcher
+docker compose --profile individual up sentiment qa generation
 ```
 
-#### Access UIs
+## Access Points
 
-After API deployment, access:
-- API docs: http://localhost:8000/docs
+- Swagger UI: http://localhost:8000/docs
+- ReDoc: http://localhost:8000/redoc
+- OpenAPI JSON: http://localhost:8000/openapi.json
 - Health: http://localhost:8000/health
-- Metrics: http://localhost:8000/metrics
+- Readiness: http://localhost:8000/ready
+- Prometheus metrics: http://localhost:8000/metrics
 
-Optional UIs are available at:
-- Sentiment: http://localhost:7860
-- Similarity: http://localhost:7861
-- NER: http://localhost:7862
-- Summarization: http://localhost:7863
-- Performance: http://localhost:7864
-- **QA: http://localhost:7865** (NEW)
-- **Generation: http://localhost:7866** (NEW)
-- **Zero-Shot: http://localhost:7867** (NEW)
-- **Translation: http://localhost:7868** (NEW)
-- **Vision: http://localhost:7869** (NEW)
+## Cloud Deployment Shape
 
-## Kubernetes Deployment
+Recommended target architecture:
 
-### Create Deployment YAML
+```text
+HTTPS load balancer
+  -> API container(s)
+      -> managed Redis for rate limiting
+      -> persistent or cached Hugging Face model directory
+      -> metrics/logging/tracing backend
+```
+
+Minimum platform configuration:
+
+- one container image built from this Dockerfile
+- port `8000` exposed behind HTTPS
+- managed Redis URL in `NLP_REDIS_URL`
+- `NLP_API__JWT_SECRET` stored as a secret
+- `NLP_API__API_KEYS` stored as a secret
+- memory sized for the largest expected loaded models
+
+## Kubernetes Sketch
+
+This repo does not ship a production Kubernetes manifest. A correct API-first manifest should expose container port `8000`, mount or cache Hugging Face models, configure Redis, and use `/health` and `/ready` probes.
+
+Minimal deployment shape:
 
 ```yaml
-# nlp-transformers-deployment.yaml
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: nlp-transformers
-  labels:
-    app: nlp-transformers
+  name: customer-intelligence-api
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
-      app: nlp-transformers
+      app: customer-intelligence-api
   template:
     metadata:
       labels:
-        app: nlp-transformers
+        app: customer-intelligence-api
     spec:
       containers:
-      - name: nlp-transformers
-        image: nlp-transformers-examples:latest
-        ports:
-        - containerPort: 7860
-        - containerPort: 7865
-        - containerPort: 7866
-        - containerPort: 7867
-        - containerPort: 7868
-        - containerPort: 7869
-        resources:
-          requests:
-            memory: "4Gi"
-            cpu: "2"
-          limits:
-            memory: "8Gi"
-            cpu: "4"
-        env:
-        - name: NLP_DEBUG
-          value: "false"
-        - name: PYTHONUNBUFFERED
-          value: "1"
-        volumeMounts:
-        - name: cache-volume
-          mountPath: /home/nlpuser/.cache/huggingface
-      volumes:
-      - name: cache-volume
-        persistentVolumeClaim:
-          claimName: huggingface-pvc
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: nlp-transformers-service
-spec:
-  selector:
-    app: nlp-transformers
-  type: LoadBalancer
-  ports:
-  - port: 7860
-    targetPort: 7860
-    name: sentiment
-  - port: 7865
-    targetPort: 7865
-    name: qa
-  - port: 7866
-    targetPort: 7866
-    name: generation
-  - port: 7867
-    targetPort: 7867
-    name: zero-shot
-  - port: 7868
-    targetPort: 7868
-    name: translation
-  - port: 7869
-    targetPort: 7869
-    name: vision
----
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: huggingface-pvc
-spec:
-  accessModes:
-    - ReadWriteMany
-  resources:
-    requests:
-      storage: 50Gi
+        - name: api
+          image: customer-intelligence-nlp:latest
+          ports:
+            - containerPort: 8000
+          env:
+            - name: NLP_REDIS_URL
+              valueFrom:
+                secretKeyRef:
+                  name: customer-intelligence-secrets
+                  key: redis-url
+            - name: NLP_API__JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: customer-intelligence-secrets
+                  key: jwt-secret
+            - name: NLP_API__API_KEYS
+              valueFrom:
+                secretKeyRef:
+                  name: customer-intelligence-secrets
+                  key: api-keys
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: 8000
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8000
 ```
 
-### Deploy to Kubernetes
+## Verification
+
+After deployment:
 
 ```bash
-# Create ConfigMap for sample data
-kubectl create configmap nlp-data --from-file=data/
-
-# Apply deployment
-kubectl apply -f nlp-transformers-deployment.yaml
-
-# Check deployment status
-kubectl get deployments
-kubectl get pods
-kubectl get services
-
-# Access service
-kubectl port-forward service/nlp-transformers-service 7860:7860
-kubectl port-forward service/nlp-transformers-service 7865:7865
-```
-
-## Cloud Deployment
-
-### AWS ECS
-
-```bash
-# Create ECR repository
-aws ecr create-repository --repository-name nlp-transformers
-
-# Tag image
-docker tag nlp-transformers-examples:latest \
-  <aws-account-id>.dkr.ecr.<region>.amazonaws.com/nlp-transformers:latest
-
-# Push to ECR
-docker push <aws-account-id>.dkr.ecr.<region>.amazonaws.com/nlp-transformers:latest
-
-# Create ECS task definition (see AWS documentation)
-# Deploy using ECS console or CLI
-```
-
-### Google Cloud Run
-
-```bash
-# Configure Docker for GCP
-gcloud auth configure-docker gcr.io
-
-# Tag image
-docker tag nlp-transformers-examples:latest \
-  gcr.io/<project-id>/nlp-transformers:latest
-
-# Push to GCR
-docker push gcr.io/<project-id>/nlp-transformers:latest
-
-# Deploy to Cloud Run
-gcloud run deploy nlp-transformers \
-  --image gcr.io/<project-id>/nlp-transformers:latest \
-  --platform managed \
-  --region us-central1 \
-  --port 7860 \
-  --memory 4Gi
-```
-
-### Azure Container Instances
-
-```bash
-# Create Azure Container Registry
-az acr create --resource-group <rg> --name nlptransformers --sku Basic
-
-# Push image to ACR
-az acr build --registry nlptransformers --image nlp-transformers:latest .
-
-# Deploy to ACI
-az container create \
-  --resource-group <rg> \
-  --name nlp-transformers \
-  --image nlptransformers.azurecr.io/nlp-transformers:latest \
-  --ports 7860 7865 7866 7867 7868 7869 \
-  --memory 4
-```
-
-## Performance Optimization
-
-### GPU Support
-
-```dockerfile
-# Use NVIDIA CUDA base image
-FROM nvidia/cuda:11.8-runtime-ubuntu22.04
-
-# Then follow regular installation
-```
-
-```bash
-# Run container with GPU
-docker run --gpus all \
-  -p 7860-7869:7860-7869 \
-  nlp-transformers-examples:latest
-```
-
-### Memory Optimization
-
-```bash
-# Set memory limit
-docker run -m 8g \
-  -p 7860-7869:7860-7869 \
-  nlp-transformers-examples:latest
-```
-
-### Model Caching
-
-```bash
-# Pre-warm cache by loading models
-docker run -it \
-  --name model-cache-warmer \
-  -v huggingface_cache:/home/nlpuser/.cache/huggingface \
-  nlp-transformers-examples:latest \
-  python -c "
-from ui.sentiment_playground import load_model
-load_model('Twitter RoBERTa (Multilingual)')
-"
-```
-
-## Monitoring
-
-### Health Checks
-
-```bash
-# Check API health
 curl http://localhost:8000/health
-
-# Check container health
-docker ps  # HEALTHCHECK status shown
+curl http://localhost:8000/ready
+curl http://localhost:8000/metrics
+curl http://localhost:8000/api/v1/models
 ```
 
-### Logging
+Authenticated smoke test:
 
 ```bash
-# View Docker logs
-docker logs nlp-api -f
-
-# View Docker Compose logs
-docker compose logs -f api
-
-# Kubernetes logs
-kubectl logs deployment/nlp-transformers -f
+curl -X POST http://localhost:8000/api/v1/customer-intelligence/analyze \
+  -H "X-API-Key: <key>" \
+  -H "Content-Type: application/json" \
+  -d '{"items":[{"text":"Support fixed my issue quickly."}],"include_summary":false}'
 ```
 
-### Metrics
+## Rollback
 
-```bash
-# Docker stats
-docker stats nlp-app
-
-# Kubernetes metrics
-kubectl top nodes
-kubectl top pods
-```
-
-## Troubleshooting
-
-### Model Loading Errors
-
-```bash
-# Check available memory
-docker run --rm nlp-transformers-examples:latest df -h
-
-# Reduce model size
-docker run -e NLP_MAX_CACHED_MODELS=2 \
-  nlp-transformers-examples:latest
-```
-
-### Port Conflicts
-
-```bash
-# Map to different host ports
-docker run -p 8860:7860 -p 8865:7865 \
-  nlp-transformers-examples:latest
-
-# Check port usage
-lsof -i :7860
-sudo netstat -tlnp | grep 7860
-```
-
-### Out of Memory
-
-```bash
-# Increase container memory
-docker run -m 16g \
-  nlp-transformers-examples:latest
-
-# Use smaller models
-# Edit config/models.yaml to use DistilBERT, DistilGPT-2, etc.
-```
-
-## Best Practices
-
-1. **Use Health Checks:** Enable health checks for production
-2. **Persistent Storage:** Mount volume for model cache
-3. **Resource Limits:** Set memory and CPU limits
-4. **Non-root User:** Container uses nlpuser (non-root)
-5. **Multi-stage Build:** Optimized image size using multi-stage Dockerfile
-6. **Environment Variables:** Use env vars for configuration
-7. **Log Rotation:** Configure log rotation for long-running containers
-8. **Security:** Run as non-root, use read-only filesystems where possible
-9. **Caching:** Pre-warm model cache before production deployment
-10. **Load Balancing:** Use load balancer for horizontal scaling
-
-## Scaling Considerations
-
-### Horizontal Scaling
-
-- Run multiple container instances
-- Use load balancer (HAProxy, Nginx, AWS ALB)
-- Share model cache using persistent volume
-- Environment: Kubernetes, Docker Swarm, ECS
-
-### Vertical Scaling
-
-- Increase container memory (for larger models)
-- Add GPU support (for faster inference)
-- Optimize model selection (use DistilBERT instead of BERT)
-
-## Security
-
-- Run containers as non-root user
-- Use read-only filesystems
-- Implement rate limiting
-- Use API authentication
-- Enable HTTPS/TLS
-- Keep dependencies updated
-- Scan images for vulnerabilities
-
-```bash
-# Scan image for vulnerabilities
-docker scan nlp-transformers-examples:latest
-
-# Use Docker Content Trust
-export DOCKER_CONTENT_TRUST=1
-docker push nlp-transformers-examples:latest
-```
-
-## Updates
-
-To deploy new versions:
-
-```bash
-# Rebuild image
-docker build -t nlp-transformers-examples:v1.1 .
-
-# Update Docker Compose
-docker-compose down
-docker-compose up -d
-
-# Update Kubernetes
-kubectl set image deployment/nlp-transformers \
-  nlp-transformers=nlp-transformers-examples:v1.1
-```
-
----
-
-**For more information, see:**
-- [ARCHITECTURE.md](./ARCHITECTURE.md) - System design and tradeoffs
-- [EVAL_REPORT.md](./EVAL_REPORT.md) - Evaluation results and limitations
-- [OPERATIONS.md](./OPERATIONS.md) - Operational runbook
-- [CLAUDE.md](./CLAUDE.md) - Architecture and configuration
-- [README.md](./README.md) - Project overview
+Keep the previous container image tag available. Roll back by redeploying the previous tag and keeping Redis data compatible. Rate-limit keys are ephemeral fixed-window counters, so Redis rollback usually does not require migration.

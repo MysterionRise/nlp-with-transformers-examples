@@ -1,292 +1,129 @@
 # Customer Intelligence NLP Platform
 
-API-first Customer Intelligence platform for analyzing reviews, support notes, and market text with transformer-based NLP. Built with Hugging Face Transformers, FastAPI, Redis-backed rate limiting, Prometheus metrics, and optional Gradio demos.
-
-[![Dependabot](https://img.shields.io/badge/Dependabot-enabled-brightgreen.svg)](https://github.com/MysterionRise/transformers-nlp-suite/network/updates)
+[![CI](https://github.com/MysterionRise/transformers-nlp-suite/actions/workflows/ci.yml/badge.svg)](https://github.com/MysterionRise/transformers-nlp-suite/actions/workflows/ci.yml)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-## 🎯 Features
+API-first NLP platform for turning customer reviews, support notes, and market text into structured intelligence signals. The main proof point is the FastAPI service: authenticated endpoints, shared model caching, Redis-backed rate limiting, Prometheus metrics, structured logs, Docker Compose runtime, and CI-covered tests.
 
-### Customer Intelligence REST API
-- 🚀 **Production FastAPI Server** - Full REST API with OpenAPI/Swagger documentation
-- 🔐 **Authentication** - API key and JWT token support
-- ⏱️ **Rate Limiting** - Redis-backed per-user limits with in-memory local fallback
-- 📊 **Prometheus Metrics** - Request, inference, cache, auth, and rate-limit metrics
-- 📚 **Interactive Docs** - Swagger UI at `/docs` and ReDoc at `/redoc`
-- 🧭 **Portfolio Workflow** - `/api/v1/customer-intelligence/analyze` combines sentiment, NER, aggregates, and summaries
+Gradio UIs remain available as optional demos, but the product story is the API.
 
-### Interactive UIs
-- 🎭 **Sentiment Analysis Playground** - Analyze sentiment with multiple models
-- 🔍 **Sentence Similarity Explorer** - Compare embeddings and semantic similarity
-- 🏷️ **NER Visualizer** - Extract and visualize named entities
-- 📝 **Text Summarization Studio** - Generate and compare text summaries
-- 📊 **Model Performance Dashboard** - Compare and evaluate model performance
+## What It Does
 
-### Production-Ready Infrastructure
-- ⚙️ **Centralized Configuration** - YAML-based model registry with 25+ pre-configured models
-- 🔄 **Smart Model Caching** - LRU cache with automatic GPU/CPU detection
-- 📝 **Structured Logging** - Colored console output with file rotation
-- 🛡️ **Error Handling** - Custom exceptions and graceful degradation
-- 🚀 **Performance Optimization** - Singleton patterns and lazy loading
+- Analyzes sentiment for individual or batched customer text.
+- Extracts named entities with spaCy or transformer-backed NER models.
+- Computes semantic similarity with sentence-transformers embeddings.
+- Generates summaries and extractive QA answers from supplied text.
+- Combines these into `/api/v1/customer-intelligence/analyze` for portfolio-grade customer feedback analysis.
+- Exposes runtime state through `/health`, `/ready`, `/metrics`, and `/api/v1/status`.
 
-### CLI Examples
-- Sentiment analysis on reviews
-- Named entity recognition with Spacy
-- Text summarization with multiple models
-- Sentence embeddings and similarity
-- Data scraping from Google Play
-- Comprehensive evaluation metrics (BLEU, ROUGE, METEOR, BERTScore)
+## Current Status
 
-## 🚀 Quick Start
+Implemented and verified:
 
-### Installation
+- Docker Compose API stack: `docker compose up api redis`
+- API key and JWT authentication
+- Nested environment loading for `NLP_API__...` settings
+- Shared inference layer over transformers, sentence-transformers, and spaCy
+- LRU model cache with hit, miss, eviction, and size metrics
+- Redis-backed rate limiting when `NLP_REDIS_URL` is configured, with memory fallback for local/test use
+- Fast mocked API tests and slow real-model integration tests in CI
+- Architecture, operations, evaluation, model-card, and ADR documentation
 
-1. Clone the repository:
-```bash
-git clone https://github.com/MysterionRise/transformers-nlp-suite.git
-cd transformers-nlp-suite
-```
+Important limitations:
 
-2. Install dependencies:
-```bash
-pip install -r requirements.txt
-```
+- The bundled demo key is for local portfolio review only.
+- First real-model requests can be slow because models are downloaded and loaded lazily.
+- The tracked eval set is a smoke check, not a production quality benchmark.
+- This is not intended for high-stakes or regulated automated decisions.
 
-3. For NER functionality, download Spacy model:
-```bash
-python -m spacy download en_core_web_sm
-# Or for better accuracy (larger model):
-python -m spacy download en_core_web_trf
-```
+## Quick Start
 
-### Launch Interactive UIs
+### Docker Compose
 
-**Option 1: Interactive Menu**
-```bash
-python launch_ui.py
-```
+The canonical local proof is the API plus Redis:
 
-**Option 2: Launch Specific UI**
-```bash
-python launch_ui.py sentiment       # Sentiment Analysis
-python launch_ui.py similarity      # Sentence Similarity
-python launch_ui.py ner             # Named Entity Recognition
-python launch_ui.py summarization   # Text Summarization
-python launch_ui.py performance     # Model Performance Dashboard
-```
-
-**Option 3: Direct Launch**
-```bash
-python ui/sentiment_playground.py      # Port 7860
-python ui/similarity_explorer.py       # Port 7861
-python ui/ner_visualizer.py           # Port 7862
-python ui/summarization_studio.py     # Port 7863
-python ui/performance_dashboard.py    # Port 7864
-```
-
-### Launch REST API Server
-
-**Docker Compose (recommended portfolio path):**
 ```bash
 docker compose up api redis
 ```
 
 Then open:
-- **Swagger UI**: http://localhost:8000/docs
-- **Health Check**: http://localhost:8000/health
-- **Prometheus Metrics**: http://localhost:8000/metrics
 
-The Compose API service uses `.env.example` for a local demo key. For any shared deployment, copy it to `.env` and replace the secret and key values.
+- Swagger UI: http://localhost:8000/docs
+- Health: http://localhost:8000/health
+- Readiness: http://localhost:8000/ready
+- Metrics: http://localhost:8000/metrics
+
+The Compose service uses `.env.example`, which contains the local demo API key used in the examples below. For any shared deployment, copy `.env.example` to `.env` or configure equivalent platform secrets, then replace `NLP_API__JWT_SECRET` and `NLP_API__API_KEYS`.
+
+### Local Python
 
 ```bash
-# Launch API server
+pip install -r requirements.txt
+python -m spacy download en_core_web_sm
+
+export NLP_API__JWT_SECRET=replace-with-a-long-random-secret
+export NLP_API__API_KEYS='{"demo-customer-intel-key":{"name":"Portfolio Demo","role":"admin","rate_limit":1000,"enabled":true}}'
+
 python launch_ui.py api
-
-# Launch with auto-reload (development)
-python launch_ui.py api --reload
-
-# Custom host/port
-python launch_ui.py api --host 0.0.0.0 --port 8080
 ```
 
-After launching, access:
-- **Swagger UI**: http://localhost:8000/docs
-- **ReDoc**: http://localhost:8000/redoc
-- **OpenAPI JSON**: http://localhost:8000/openapi.json
+By default, local API docs are available at http://localhost:8000/docs.
 
-## 📚 Interactive UIs Overview
+## API Examples
 
-### 🎭 Sentiment Analysis Playground
-**Port:** 7860 | **File:** `ui/sentiment_playground.py`
+### Customer Intelligence Workflow
 
-Analyze text sentiment using state-of-the-art transformer models.
-
-**Features:**
-- Multiple model comparison (RoBERTa, DistilBERT, BERT)
-- Real-time sentiment classification
-- Confidence scores with visual bars
-- Batch processing support
-- Example texts included
-
-**Models:**
-- Twitter RoBERTa (Multilingual)
-- Twitter RoBERTa (English)
-- DistilBERT SST-2
-- BERT Base SST-2
-
----
-
-### 🔍 Sentence Similarity Explorer
-**Port:** 7861 | **File:** `ui/similarity_explorer.py`
-
-Explore semantic similarity between sentences using embeddings.
-
-**Features:**
-- Pairwise sentence comparison
-- Semantic search (find most similar sentences)
-- 2D embedding visualization (t-SNE, PCA)
-- Similarity heatmaps
-- Interactive plots
-
-**Use Cases:**
-- Duplicate detection
-- Semantic search
-- Content clustering
-- Paraphrase detection
-
----
-
-### 🏷️ NER Visualizer
-**Port:** 7862 | **File:** `ui/ner_visualizer.py`
-
-Extract and visualize named entities from text using Spacy.
-
-**Features:**
-- Interactive entity highlighting
-- Entity type filtering (18+ entity types)
-- Entity statistics and charts
-- JSON export
-- Pre-loaded examples
-
-**Entity Types:**
-- PERSON, ORG, GPE, LOC, DATE, TIME
-- MONEY, PERCENT, PRODUCT, EVENT
-- And more...
-
----
-
-### 📝 Text Summarization Studio
-**Port:** 7863 | **File:** `ui/summarization_studio.py`
-
-Generate concise summaries with multiple transformer models.
-
-**Features:**
-- Single model summarization
-- Multi-model comparison
-- Adjustable parameters (min/max length)
-- Summary statistics (compression ratio)
-- Example articles
-
-**Models:**
-- BART Large CNN
-- T5 Large/Base
-- Pegasus XSum
-- DistilBART CNN
-
----
-
-### 📊 Model Performance Dashboard
-**Port:** 7864 | **File:** `ui/performance_dashboard.py`
-
-Compare and evaluate model outputs using comprehensive NLP metrics.
-
-**Features:**
-- Single and batch text comparison
-- Multiple evaluation metrics (BLEU, ROUGE, METEOR, BERTScore, Cosine Similarity)
-- Radar and bar chart visualizations
-- Model registry browser
-- Cache statistics viewer
-- JSON export functionality
-
-**Use Cases:**
-- Model evaluation and comparison
-- Quality assessment of generated text
-- Benchmarking different models
-- Research and experimentation
-
----
-
-## 🚀 REST API
-
-The Customer Intelligence API provides production-ready REST endpoints for core NLP tasks and the portfolio workflow.
-
-### API Endpoints
-
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/api/v1/sentiment` | POST | Analyze text sentiment |
-| `/api/v1/sentiment/batch` | POST | Batch sentiment analysis |
-| `/api/v1/summarize` | POST | Generate text summary |
-| `/api/v1/ner` | POST | Extract named entities |
-| `/api/v1/similarity` | POST | Compute text similarity |
-| `/api/v1/qa` | POST | Question answering |
-| `/api/v1/models` | GET | List available models |
-| `/health` | GET | Liveness probe |
-| `/ready` | GET | Readiness probe |
-| `/metrics` | GET | Prometheus metrics |
-
-### Authentication
-
-All API endpoints require authentication via:
-
-**API Key** (recommended for scripts):
 ```bash
-curl -X POST http://localhost:8000/api/v1/sentiment \
+curl -X POST http://localhost:8000/api/v1/customer-intelligence/analyze \
   -H "X-API-Key: demo-customer-intel-key" \
   -H "Content-Type: application/json" \
-  -d '{"text": "I love this product!"}'
+  -d '{
+    "items": [
+      {
+        "id": "review-001",
+        "text": "The product is excellent, but delivery took too long.",
+        "metadata": {"source": "reviews"}
+      },
+      {
+        "id": "ticket-002",
+        "text": "Support resolved my issue quickly and the mobile app is easy to use.",
+        "metadata": {"source": "support"}
+      }
+    ],
+    "include_summary": true
+  }'
 ```
 
-**JWT Token** (for web apps):
-```bash
-# Get token
-TOKEN=$(curl -s -X POST http://localhost:8000/api/v1/auth/token \
-  -H "X-API-Key: demo-customer-intel-key" | jq -r '.access_token')
+Returns per-item sentiment and entities, plus aggregate sentiment distribution, top entities, summary, model IDs, and processing time.
 
-# Use token
-curl -X POST http://localhost:8000/api/v1/sentiment \
-  -H "Authorization: Bearer $TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{"text": "I love this product!"}'
-```
+### Sentiment
 
-### Example API Calls
-
-**Sentiment Analysis:**
 ```bash
 curl -X POST http://localhost:8000/api/v1/sentiment \
   -H "X-API-Key: demo-customer-intel-key" \
   -H "Content-Type: application/json" \
   -d '{
-    "text": "This product exceeded all my expectations!",
+    "text": "This product exceeded my expectations.",
     "model": "twitter_roberta_multilingual"
   }'
 ```
 
-**Text Summarization:**
+### Summarization
+
 ```bash
 curl -X POST http://localhost:8000/api/v1/summarize \
   -H "X-API-Key: demo-customer-intel-key" \
   -H "Content-Type: application/json" \
   -d '{
-    "text": "Artificial intelligence has transformed numerous industries...",
-    "min_length": 30,
-    "max_length": 100
+    "text": "Artificial intelligence has transformed customer support operations by helping teams triage feedback, summarize conversations, and identify recurring product issues. The strongest systems still require human review, observability, and domain-specific evaluation before production rollout.",
+    "min_length": 20,
+    "max_length": 60
   }'
 ```
 
-**Named Entity Recognition:**
+### Named Entity Recognition
+
 ```bash
 curl -X POST http://localhost:8000/api/v1/ner \
   -H "X-API-Key: demo-customer-intel-key" \
@@ -297,213 +134,171 @@ curl -X POST http://localhost:8000/api/v1/ner \
   }'
 ```
 
-**Semantic Similarity:**
+### Semantic Similarity
+
 ```bash
 curl -X POST http://localhost:8000/api/v1/similarity \
   -H "X-API-Key: demo-customer-intel-key" \
   -H "Content-Type: application/json" \
   -d '{
-    "text1": "The weather is beautiful today.",
-    "text2": "It is a lovely sunny day outside."
+    "text1": "The onboarding flow was easy to complete.",
+    "text2": "The setup process was simple and clear.",
+    "model": "all_minilm_l6"
   }'
 ```
 
-**Question Answering:**
+### Question Answering
+
 ```bash
 curl -X POST http://localhost:8000/api/v1/qa \
   -H "X-API-Key: demo-customer-intel-key" \
   -H "Content-Type: application/json" \
   -d '{
-    "question": "What is the capital of France?",
-    "context": "France is a country in Western Europe. Its capital is Paris."
+    "question": "What needs human review?",
+    "context": "Generated summaries can help analysts review customer feedback, but important business decisions still need human review."
   }'
 ```
 
-### Rate Limiting
+### JWT Flow
 
-Requests are rate-limited based on your API key tier:
-- **Admin**: 1000 requests/minute
-- **User**: 100 requests/minute
-- **Demo**: 20 requests/minute
-
-Rate limit headers are included in all responses:
-- `X-RateLimit-Limit`: Maximum requests per window
-- `X-RateLimit-Remaining`: Remaining requests
-- `X-RateLimit-Reset`: Unix timestamp when window resets
-
----
-
-## 🏗️ Infrastructure Components
-
-### Configuration Management (`config/`)
-Centralized configuration system with YAML-based model registry:
-- **models.yaml**: 25+ pre-configured models across 8 categories
-- **settings.py**: Application settings with environment variable support
-- Pydantic validation for type safety
-
-```python
-from config import get_model_registry, get_settings
-
-# Access model configurations
-registry = get_model_registry()
-model_config = registry.get_model('sentiment_analysis', 'twitter_roberta_multilingual')
-
-# Access settings
-settings = get_settings()
-print(f"Device: {settings.device}, Max cached models: {settings.max_cached_models}")
-```
-
-### Model Cache (`utils/model_cache.py`)
-Intelligent model caching with LRU eviction:
-- Automatic GPU/CPU/MPS detection
-- Lazy loading (models loaded on first use)
-- Memory management with automatic cleanup
-- Thread-safe singleton pattern
-
-```python
-from utils import load_model
-
-# Models are cached automatically
-model = load_model('sentiment_analysis', 'twitter_roberta_multilingual')
-```
-
-### Error Handling (`utils/error_handler.py`)
-Custom exceptions and decorators for robust error handling:
-- `ModelLoadError`, `InferenceError`, `InvalidInputError`, etc.
-- `@handle_errors` decorator for graceful degradation
-- `@retry_on_error` decorator for transient failures
-- User-friendly error messages
-
-### Logging (`utils/logger.py`)
-Structured logging with colored console output:
-- Automatic log rotation
-- Performance tracking with `PerformanceLogger`
-- Configurable log levels
-- File and console handlers
-
-```python
-from utils import get_logger, PerformanceLogger
-
-logger = get_logger(__name__)
-with PerformanceLogger("model_inference", logger=logger):
-    result = model.predict(text)
-```
-
----
-
-## 🛠️ CLI Examples
-
-### Sentiment Analysis
 ```bash
-python sentiment-analysis.py
-```
-Analyzes sentiment of reviews from `data/all_reviews.csv`.
+TOKEN=$(curl -s -X POST http://localhost:8000/api/v1/auth/token \
+  -H "X-API-Key: demo-customer-intel-key" | jq -r ".access_token")
 
-### Named Entity Recognition
-```bash
-python ner.py
-```
-Extracts entities from text and generates visualizations.
-
-### Text Summarization
-```bash
-python summarisation_llm_test.py
-```
-Compares 5 summarization models on JSON files in `data/` directory.
-
-### Sentence Embeddings
-```bash
-python embeddings_test.py
-```
-Generates sentence embeddings using sentence-transformers.
-
-### Data Scraping
-```bash
-python scrap_reviews.py
-```
-Scrapes app reviews from Google Play Store.
-
-### Evaluation
-```bash
-python eval/eval.py
-```
-Comprehensive NLP evaluation with BLEU, ROUGE, METEOR, BERTScore.
-
-## 📦 Requirements
-
-### Core Dependencies
-- transformers[torch] - Hugging Face Transformers
-- torch - PyTorch
-- spacy - Industrial NLP
-- numpy - Numerical computing
-
-### UI Dependencies
-- gradio>=4.0.0 - Interactive UIs
-- plotly>=5.17.0 - Visualizations
-- scikit-learn - ML utilities
-- umap-learn - Dimensionality reduction
-- pandas - Dashboard and tabular evaluation outputs
-
-### Evaluation
-- nltk - BLEU scores
-- rouge-score - ROUGE metrics
-- bert-score - BERT-based evaluation
-
-### API Dependencies
-- fastapi>=0.109.0 - REST API framework
-- uvicorn[standard] - ASGI server
-- python-jose[cryptography] - JWT authentication
-- slowapi - Rate limiting
-- prometheus-client - Metrics
-- redis - Shared rate-limit backend
-
-See `requirements.txt` for full list.
-
-**Customer Intelligence Workflow:**
-```bash
-curl -X POST http://localhost:8000/api/v1/customer-intelligence/analyze \
-  -H "X-API-Key: demo-customer-intel-key" \
+curl -X POST http://localhost:8000/api/v1/sentiment \
+  -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
-  -d '{
-    "items": [
-      {"id": "review-001", "text": "The product is excellent, but delivery took too long."},
-      {"id": "ticket-002", "text": "Support resolved my issue quickly and the mobile app is easy to use."}
-    ],
-    "include_summary": true
-  }'
+  -d '{"text": "The new workflow is much faster."}'
 ```
 
-## 🎓 Use Cases
+## Endpoint Reference
 
-- **Customer Intelligence**: Analyze reviews, support notes, and customer feedback
-- **AI Platform Review**: Demonstrate API design, model caching, auth, metrics, and deployment
-- **Model Evaluation**: Compare NLP outputs and track quality/latency tradeoffs
-- **Portfolio Demo**: Showcase production-minded AI engineering decisions
+| Endpoint | Method | Auth | Purpose |
+| --- | --- | --- | --- |
+| `/api/v1/customer-intelligence/analyze` | POST | Required | Combined sentiment, NER, aggregates, and optional summary |
+| `/api/v1/sentiment` | POST | Required | Single-text sentiment |
+| `/api/v1/sentiment/batch` | POST | Required | Batch sentiment |
+| `/api/v1/summarize` | POST | Required | Text summarization |
+| `/api/v1/ner` | POST | Required | Named entity extraction |
+| `/api/v1/similarity` | POST | Required | Semantic similarity |
+| `/api/v1/qa` | POST | Required | Extractive question answering |
+| `/api/v1/auth/token` | POST | API key | Exchange API key for JWT |
+| `/api/v1/models` | GET | No | List model registry categories |
+| `/api/v1/models/{category}` | GET | No | List models in one category |
+| `/api/v1/status` | GET | Optional | Request, latency, cache, and uptime summary |
+| `/health` | GET | No | Liveness probe |
+| `/ready` | GET | No | Config, registry, auth, cache, and Redis readiness |
+| `/metrics` | GET | No | Prometheus exposition |
 
-## 📖 Additional Resources
+## Configuration
 
-- [Architecture](ARCHITECTURE.md) - System design and tradeoffs
-- [Evaluation Report](EVAL_REPORT.md) - Quality checks, risks, and limitations
-- [Operations Guide](OPERATIONS.md) - Local, Docker, and cloud operations
-- [Hugging Face Transformers Docs](https://huggingface.co/docs/transformers)
-- [Spacy Documentation](https://spacy.io/usage)
-- [Gradio Documentation](https://gradio.app/docs/)
+Key environment variables:
 
-## 🤝 Contributing
+| Variable | Purpose |
+| --- | --- |
+| `NLP_API__JWT_SECRET` | JWT signing secret |
+| `NLP_API__API_KEYS` | JSON map of API keys to name, role, rate limit, and enabled flag |
+| `NLP_REDIS_URL` | Redis backend for shared rate limiting |
+| `NLP_MAX_CACHED_MODELS` | LRU model-cache size |
+| `NLP_LOG_LEVEL` | Logging level |
+| `NLP_JSON_LOGS` | Emit JSON logs when `true` |
+| `NLP_OTEL_ENABLED` | Enable optional OpenTelemetry FastAPI instrumentation |
 
-Contributions are welcome! Feel free to:
-- Report bugs
-- Suggest new features
-- Submit pull requests
-- Improve documentation
+Model defaults live in `utils/inference.py` and model definitions live in `config/models.yaml`.
 
-## 📄 License
+Default API models:
 
-MIT License - See LICENSE file for details.
+- Sentiment: `twitter_roberta_multilingual`
+- NER: `spacy_sm`
+- Similarity: `all_minilm_l6`
+- Summarization: `bart_large_cnn`
+- QA: `distilbert_squad`
 
-## 🙏 Acknowledgments
+## Architecture
 
-- Inspired by "Natural Language Processing with Transformers" book
-- Built with Hugging Face Transformers
-- UI powered by Gradio
-- NER powered by Spacy
+The API routers do not load models directly. They call `utils/inference.py`, which performs model lookup, output normalization, timing, and access to the shared cache in `utils/model_cache.py`.
+
+The cache supports:
+
+- Hugging Face transformers pipelines
+- sentence-transformers embedding models
+- spaCy language pipelines
+
+Operational instrumentation includes:
+
+- Request logging with request ID, auth method, user role, status code, latency, and error type
+- Inference logs with task, model key, model ID, status, and latency
+- Prometheus counters and histograms for HTTP requests, inference, cache, auth attempts, errors, and rate-limit hits
+- `/api/v1/status` summaries from real in-process request and cache state
+
+For more detail, see [ARCHITECTURE.md](ARCHITECTURE.md).
+
+## Testing And Evaluation
+
+CI runs:
+
+- Black, isort, and flake8
+- Fast tests on Python 3.11, 3.12, and 3.13
+- Slow real-model integration tests on Python 3.11
+- Full test suite with coverage on Python 3.11
+
+Useful local commands:
+
+```bash
+pytest -m "not slow"
+pytest -m slow
+python scripts/run_eval.py --api-url http://localhost:8000 --api-key <key>
+python scripts/benchmark_api.py --api-url http://localhost:8000 --api-key <key>
+```
+
+The tracked eval data is in `data/customer_intelligence_eval.json`. It is intentionally small and should be treated as a smoke/regression set, not as evidence of production model quality. See [EVAL_REPORT.md](EVAL_REPORT.md).
+
+## Optional Gradio UIs
+
+The UI layer is secondary but still available:
+
+```bash
+python launch_ui.py
+python launch_ui.py sentiment
+python launch_ui.py similarity
+python launch_ui.py ner
+python launch_ui.py summarization
+python launch_ui.py performance
+python launch_ui.py qa
+python launch_ui.py generation
+python launch_ui.py zero_shot
+python launch_ui.py translation
+python launch_ui.py vision
+```
+
+Docker Compose UI profiles:
+
+```bash
+docker compose --profile ui up ui-launcher
+docker compose --profile individual up sentiment qa generation
+```
+
+## Documentation
+
+- [ARCHITECTURE.md](ARCHITECTURE.md): system design and tradeoffs
+- [OPERATIONS.md](OPERATIONS.md): local, Docker, cloud, monitoring, and runbooks
+- [EVAL_REPORT.md](EVAL_REPORT.md): current eval set, CI coverage, limitations, next steps
+- [MODEL_CARD.md](MODEL_CARD.md): intended use, out-of-scope use, default models, risks
+- [ADR 0001](docs/adr/0001-shared-inference-cache.md): shared inference cache
+- [ADR 0002](docs/adr/0002-redis-rate-limiting.md): Redis rate limiting
+- [ADR 0003](docs/adr/0003-api-based-evaluation.md): API-based evaluation
+
+## Portfolio Read
+
+This repo is meant to show AI engineering judgment, not only model demos:
+
+- coherent product framing
+- API-first runtime
+- real auth/rate-limit/metrics/logging paths
+- model-cache and inference abstractions
+- tests that separate fast mocked behavior from slow model downloads
+- explicit limitations and risk boundaries
+
+## License
+
+MIT License. See `LICENSE`.

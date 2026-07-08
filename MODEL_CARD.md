@@ -2,38 +2,53 @@
 
 ## System
 
-Customer Intelligence NLP Platform combines open-source NLP models for sentiment analysis, named entity recognition, semantic similarity, extractive question answering, and summarization.
+Customer Intelligence NLP Platform combines open-source NLP models behind a FastAPI service. The platform performs sentiment analysis, named entity recognition, semantic similarity, extractive question answering, and summarization.
 
 ## Intended Use
 
-- Analyze customer reviews and support notes.
+- Analyze customer reviews, support notes, and survey feedback.
 - Extract aggregate sentiment and frequently mentioned entities.
-- Compare short text similarity for duplicate or related feedback detection.
+- Detect related or duplicate feedback through semantic similarity.
 - Produce draft summaries for human review.
+- Demonstrate production-minded AI engineering patterns in a portfolio setting.
 
 ## Out Of Scope
 
 - Automated high-stakes decisions.
-- Medical, legal, credit, employment, or insurance decisions.
-- Fully autonomous customer messaging without human review.
+- Medical, legal, credit, employment, insurance, or safety-critical use.
+- Fully autonomous customer messaging.
+- Surveillance or profiling of individuals.
 - Regulated production use without domain-specific evaluation and risk review.
 
-## Default Models
+## Default API Models
 
-- Sentiment: `twitter_roberta_multilingual`
-- NER: `spacy_sm`
-- Similarity: `all_minilm_l6`
-- Summarization: `bart_large_cnn`
-- QA: `distilbert_squad`
+| Task | Registry key | Model ID |
+| --- | --- | --- |
+| Sentiment | `twitter_roberta_multilingual` | `cardiffnlp/twitter-xlm-roberta-base-sentiment` |
+| NER | `spacy_sm` | `en_core_web_sm` |
+| Similarity | `all_minilm_l6` | `sentence-transformers/all-MiniLM-L6-v2` |
+| Summarization | `bart_large_cnn` | `facebook/bart-large-cnn` |
+| QA | `distilbert_squad` | `distilbert-base-cased-distilled-squad` |
 
-## Limitations
+Additional model keys are available in `config/models.yaml`.
 
-- Model outputs may be wrong, biased, stale, or inconsistent across domains.
-- Mixed sentiment text can produce a single coarse label that hides nuance.
-- spaCy small NER prioritizes speed over recall.
-- Summaries can omit important details or overstate weak evidence.
-- Performance depends on local hardware, cache warmth, model size, and network/cache availability.
+## Known Limitations
+
+- Outputs can be wrong, biased, stale, or inconsistent across domains.
+- Mixed sentiment text is reduced to a single primary label by the API.
+- Entity extraction may miss domain-specific names or over-detect common nouns depending on the model.
+- Generated summaries may omit important details or introduce misleading emphasis.
+- Extractive QA can only answer questions supported by the supplied context.
+- Latency depends on model size, hardware, cache warmth, network access, and memory pressure.
+
+## Data And Privacy
+
+The repo includes small sample/eval data only. Real deployments must define retention, redaction, access control, and logging policies before processing sensitive customer data.
+
+The current structured request logs avoid raw body logging by default. Operators should keep debug logging disabled for sensitive environments.
 
 ## Evaluation
 
-See `EVAL_REPORT.md` and `data/customer_intelligence_eval.json` for the current smoke evaluation. The current eval set proves wiring and basic sanity only; it does not establish production model quality.
+See `EVAL_REPORT.md` and `data/customer_intelligence_eval.json`.
+
+The current eval set validates wiring and basic behavior. It does not establish production readiness for any domain.

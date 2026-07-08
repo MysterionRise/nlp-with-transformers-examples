@@ -1,61 +1,135 @@
 # Operations Guide
 
-## Local API
-
-```bash
-pip install -r requirements.txt
-python -m spacy download en_core_web_sm
-python launch_ui.py api
-```
-
-Local docs are available at `http://localhost:8000/docs`.
-
-## Docker Compose
-
-Canonical portfolio run:
+## Canonical Local Run
 
 ```bash
 docker compose up api redis
 ```
 
-The Compose API service uses `.env.example` for a local demo. For any shared environment:
+Open:
+
+- API docs: http://localhost:8000/docs
+- Health: http://localhost:8000/health
+- Readiness: http://localhost:8000/ready
+- Metrics: http://localhost:8000/metrics
+
+The Compose API service uses `.env.example`. The included API key is only for local portfolio demos.
+
+## Local Python Run
 
 ```bash
-cp .env.example .env
-# Replace NLP_API__JWT_SECRET and NLP_API__API_KEYS
+pip install -r requirements.txt
+python -m spacy download en_core_web_sm
+
+export NLP_API__JWT_SECRET=replace-with-a-long-random-secret
+export NLP_API__API_KEYS='{"demo-customer-intel-key":{"name":"Portfolio Demo","role":"admin","rate_limit":1000,"enabled":true}}'
+
+python launch_ui.py api
 ```
 
-Then point the Compose service at `.env` or export equivalent environment variables in the deployment platform.
+Use `python launch_ui.py api --host 0.0.0.0 --port 8000` when binding outside localhost.
 
-## Health And Readiness
+## Required Environment
 
-- `/health`: liveness probe.
-- `/ready`: validates config, model registry, model cache, auth configuration, and Redis when configured.
-- `/api/v1/status`: request counts, average latency, cache stats, and uptime.
-- `/metrics`: Prometheus exposition.
+For shared or public deployments, configure:
+
+- `NLP_API__JWT_SECRET`
+- `NLP_API__API_KEYS`
+- `NLP_REDIS_URL`
+- `NLP_MAX_CACHED_MODELS`
+- `NLP_LOG_LEVEL`
+- `NLP_JSON_LOGS`
+
+Optional:
+
+- `NLP_API__CORS_ORIGINS`
+- `NLP_OTEL_ENABLED`
+- `NLP_CACHE_DIR`
+- `NLP_DEVICE`
+
+## Readiness And Health
+
+- `/health`: liveness only; should remain cheap and always return healthy while the process is running.
+- `/ready`: verifies configuration, registry, auth configuration, model cache initialization, and Redis availability when Redis is configured.
+- `/api/v1/status`: request counts, average latency by endpoint, model-cache stats, and uptime.
+- `/metrics`: Prometheus metrics.
+
+## Monitoring Signals
+
+Watch these first:
+
+- HTTP request rate and latency from `http_requests_total` and `http_request_duration_seconds`.
+- Inference latency and error counts from `model_inference_duration_seconds` and `model_inference_total`.
+- Cache behavior from `model_cache_hits_total`, `model_cache_misses_total`, `model_cache_evictions_total`, and `model_cache_size`.
+- Auth failures from `auth_attempts_total`.
+- Rate-limit pressure from `rate_limit_hits_total`.
 
 ## Security Defaults
 
 - No API keys are hardcoded in Python source.
-- Demo credentials exist only in `.env.example`.
-- API endpoints require API key or JWT.
-- Public deployments must configure HTTPS and replace demo credentials.
+- Demo credentials live in `.env.example` for local use.
+- Inference endpoints require API key or JWT.
+- Public deployments must use HTTPS and real secrets.
+- Avoid debug logging of request bodies in environments that may process sensitive customer text.
 
 ## Cloud Deployment Path
 
-Recommended simple path:
+A simple production-like path:
 
 1. Build the Docker image in CI.
-2. Push to a registry.
-3. Deploy one API container plus managed Redis.
-4. Configure `NLP_REDIS_URL`, `NLP_API__JWT_SECRET`, and `NLP_API__API_KEYS` as platform secrets.
-5. Expose port `8000` behind a managed HTTPS load balancer.
-6. Scrape `/metrics` with the platform monitoring stack.
+2. Push the image to a registry.
+3. Deploy one API service plus managed Redis.
+4. Configure `NLP_API__JWT_SECRET`, `NLP_API__API_KEYS`, and `NLP_REDIS_URL` as platform secrets.
+5. Mount or persist a Hugging Face cache volume if the platform supports it.
+6. Expose port `8000` behind HTTPS.
+7. Scrape `/metrics`.
+8. Add alerts for elevated 5xx rate, p95 latency, auth failures, and Redis unavailability.
+
+## Capacity Notes
+
+- First request to a cold model includes download/load time.
+- Each API replica has its own process-local model cache.
+- `NLP_MAX_CACHED_MODELS` should be sized against available memory.
+- Larger summarization and QA models have materially higher memory and latency costs than spaCy NER.
 
 ## Runbooks
 
-- High latency: check `/api/v1/status`, cache size, cold-start behavior, and `scripts/benchmark_api.py`.
-- 401s: verify API key JSON and JWT secret configuration.
-- 429s: inspect rate-limit headers and Redis availability.
-- NER failures: verify `en_core_web_sm` is installed in the image/runtime.
-- Model load failures: check network access, Hugging Face cache volume, memory limits, and model registry keys.
+High latency:
+
+- Check whether the request is a cold start.
+- Inspect `/api/v1/status` and cache metrics.
+- Run `python scripts/benchmark_api.py --api-url http://localhost:8000 --api-key <key>`.
+- Increase cache size or pre-warm critical models if memory allows.
+
+Unexpected 401s:
+
+- Verify `NLP_API__API_KEYS` JSON syntax.
+- Confirm the key is enabled.
+- Confirm JWTs were signed with the current `NLP_API__JWT_SECRET`.
+
+Unexpected 429s:
+
+- Check `X-RateLimit-*` headers.
+- Confirm Redis availability if deployed with multiple replicas.
+- Inspect `rate_limit_hits_total`.
+
+NER failures:
+
+- Confirm `en_core_web_sm` is installed.
+- Confirm the requested NER registry key exists.
+
+Model loading failures:
+
+- Confirm network/cache access for Hugging Face downloads.
+- Confirm model registry task and model ID are compatible with the pinned `transformers` version.
+- Check memory limits and cache eviction behavior.
+
+## Optional UIs
+
+UIs are not part of the canonical runtime. Use them for demos:
+
+```bash
+docker compose --profile ui up ui-launcher
+python launch_ui.py sentiment
+python launch_ui.py qa
+```

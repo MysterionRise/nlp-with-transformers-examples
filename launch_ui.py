@@ -77,17 +77,17 @@ UIS = {
 
 # API server configuration
 API_CONFIG = {
-    "name": "Enterprise NLP API",
+    "name": "Customer Intelligence NLP Platform API",
     "host": "127.0.0.1",
     "port": 8000,
-    "description": "Production REST API with authentication, rate limiting, and Swagger docs",
+    "description": "API-first customer intelligence service with auth, rate limiting, metrics, and Swagger docs",
 }
 
 
 def print_banner():
     """Print welcome banner"""
     print("=" * 70)
-    print("  NLP Transformers Examples - Interactive UI & API Launcher")
+    print("  Customer Intelligence NLP Platform - UI & API Launcher")
     print("=" * 70)
     print()
 
@@ -188,7 +188,7 @@ def launch_api(host: str = None, port: int = None, reload: bool = False):
 def main():
     """Main entry point"""
     parser = argparse.ArgumentParser(
-        description="Launch interactive UIs and API server for NLP demos",
+        description="Launch optional UIs and the Customer Intelligence API server",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
@@ -212,7 +212,7 @@ Available UIs:
   vision         - Vision-Language Explorer
 
 API Server:
-  api            - Enterprise NLP REST API (Swagger docs at /docs)
+  api            - Customer Intelligence API (Swagger docs at /docs)
         """,
     )
 

@@ -1,7 +1,7 @@
 """
 FastAPI Application - Customer Intelligence NLP Platform
 
-Production-ready REST API for NLP inference with:
+Production-minded REST API for customer-intelligence NLP inference with:
 - JWT and API key authentication
 - Rate limiting with usage tracking
 - Prometheus metrics
