@@ -8,7 +8,7 @@ gliner
 pandas>=2.1.0
 
 # UI Frameworks
-gradio>=4.0.0
+gradio>=6.13.0
 streamlit>=1.28.0
 
 # Visualization
